@@ -60,8 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     
     try {
-      console.log('Loading profile for user:', supabaseUser.email);
-      
       // Check if user profile exists
       const { data: existingProfile, error: fetchError } = await supabase
         .from('user_profiles')
@@ -70,15 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', fetchError);
         throw new Error('Failed to load user profile');
       }
 
       let userProfile: UserProfile;
 
       if (!existingProfile) {
-        console.log('Creating new user profile for:', supabaseUser.email);
-        
         // Create new user profile
         const role = determineRole(supabaseUser.email || '');
         const playerId = generatePlayerId();
@@ -117,19 +112,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single();
 
         if (createError) {
-          console.error('Error creating user profile:', createError);
           throw new Error('Failed to create user profile');
         }
 
         userProfile = createdProfile;
-        console.log('Created new profile:', userProfile);
       } else {
         // Verify and update role if necessary
         const expectedRole = determineRole(supabaseUser.email || '');
         
         if (existingProfile.role !== expectedRole) {
-          console.log('Updating role from', existingProfile.role, 'to', expectedRole);
-          
           const { data: updatedProfile, error: updateError } = await supabase
             .from('user_profiles')
             .update({ 
@@ -141,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .single();
 
           if (updateError) {
-            console.error('Error updating user role:', updateError);
             userProfile = existingProfile;
           } else {
             userProfile = updatedProfile;
@@ -163,10 +153,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
 
       setUser(appUser);
-      console.log('User profile loaded successfully:', appUser);
     } catch (error) {
-      console.error('Error in loadUserProfile:', error);
       setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -177,8 +166,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     
     try {
-      console.log('Attempting sign in for:', emailOrUsername);
-      
       // Try to sign in with email first
       let result = await supabase.auth.signInWithPassword({
         email: emailOrUsername,
@@ -187,8 +174,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // If failed and input doesn't contain @, try to find user by username
       if (result.error && !emailOrUsername.includes('@')) {
-        console.log('Trying to find user by username:', emailOrUsername);
-        
         const { data: userProfile } = await supabase
           .from('user_profiles')
           .select('email')
@@ -196,7 +181,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single();
 
         if (userProfile) {
-          console.log('Found user by username, trying email:', userProfile.email);
           result = await supabase.auth.signInWithPassword({
             email: userProfile.email,
             password,
@@ -205,14 +189,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (result.error) {
-        console.error('Sign in error:', result.error);
         return { error: result.error.message };
       }
 
-      console.log('Sign in successful');
       return { data: result.data };
     } catch (error) {
-      console.error('Unexpected sign in error:', error);
       return { error: 'An unexpected error occurred during sign in' };
     } finally {
       setLoading(false);
@@ -224,8 +205,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     
     try {
-      console.log('Attempting sign up for:', email, username);
-      
       // Validate inputs
       if (!email || !password || !username) {
         return { error: 'All fields are required' };
@@ -263,14 +242,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('Sign up error:', error);
         return { error: error.message };
       }
 
-      console.log('Sign up successful');
       return { data };
     } catch (error) {
-      console.error('Unexpected sign up error:', error);
       return { error: 'An unexpected error occurred during sign up' };
     } finally {
       setLoading(false);
@@ -290,7 +266,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        console.error('Google sign in error:', error);
         return { error: error.message };
       }
 
@@ -339,14 +314,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('uid', user.uid);
 
       if (error) {
-        console.error('Update username error:', error);
         return { error: error.message };
       }
 
       setUser({ ...user, username: newUsername });
       return {};
     } catch (error) {
-      console.error('Unexpected update username error:', error);
       return { error: 'An unexpected error occurred' };
     }
   };
@@ -357,15 +330,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Sign out error:', error);
         setError(error.message);
       } else {
         setUser(null);
         setSession(null);
-        console.log('Sign out successful');
       }
     } catch (error) {
-      console.error('Unexpected sign out error:', error);
       setError('An unexpected error occurred during sign out');
     }
   };

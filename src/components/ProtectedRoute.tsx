@@ -17,7 +17,7 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -34,21 +34,21 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
           <div className="bg-red-100 rounded-full p-4 mx-auto w-20 h-20 flex items-center justify-center mb-6">
             <Shield className="h-10 w-10 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Acceso Denegado</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
           <p className="text-gray-600 mb-6">
-            No tienes permisos para acceder a esta página. Tu rol actual es <strong>{user.role}</strong>.
+            You don't have permission to access this page. Your current role is <strong>{user.role}</strong>.
           </p>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left">
-            <h3 className="font-medium text-yellow-800 mb-2">Permisos requeridos:</h3>
+            <h3 className="font-medium text-yellow-800 mb-2">Required permissions:</h3>
             <p className="text-sm text-yellow-700">
-              Esta página requiere el permiso: <code className="bg-yellow-100 px-1 rounded">{requiredPermission}</code>
+              This page requires permission: <code className="bg-yellow-100 px-1 rounded">{requiredPermission}</code>
             </p>
           </div>
           <button
             onClick={() => window.history.back()}
             className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
           >
-            Volver
+            Go Back
           </button>
         </div>
       </div>

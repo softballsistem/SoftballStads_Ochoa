@@ -101,7 +101,7 @@ export function LoginForm() {
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Iniciar Sesión</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Accede a tu panel de estadísticas de softball
+            Access your softball statistics dashboard
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export function LoginForm() {
                     value={emailOrUsername}
                     onChange={(e) => setEmailOrUsername(e.target.value)}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-                    placeholder="Ingresa tu email o usuario"
+                    placeholder="Enter your email or username"
                   />
                 </div>
               </div>
@@ -154,7 +154,7 @@ export function LoginForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-                    placeholder="Ingresa tu contraseña"
+                    placeholder="Enter your password"
                   />
                   <button
                     type="button"
@@ -176,10 +176,10 @@ export function LoginForm() {
                 {loading ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Iniciando sesión...
+                    Signing in...
                   </div>
                 ) : (
-                  'Iniciar Sesión'
+                  'Sign In'
                 )}
               </button>
             </div>
@@ -189,7 +189,7 @@ export function LoginForm() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">O continúa con</span>
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
               </div>
             </div>
 
@@ -201,14 +201,14 @@ export function LoginForm() {
                 className="group relative w-full flex justify-center py-3 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 <Chrome className="h-5 w-5 mr-2" />
-                Iniciar con Google
+                Sign in with Google
               </button>
             </div>
           </form>
 
           {/* Demo Login Buttons */}
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center mb-3">Cuentas de demostración:</p>
+            <p className="text-xs text-gray-500 text-center mb-3">Demo accounts:</p>
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => handleDemoLogin('developer')}
@@ -236,12 +236,12 @@ export function LoginForm() {
 
           <div className="text-center mt-6">
             <p className="text-sm text-gray-600">
-              ¿No tienes una cuenta?{' '}
+              Don't have an account?{' '}
               <Link
                 to="/signup"
                 className="font-medium text-green-600 hover:text-green-500 transition-colors"
               >
-                Regístrate aquí
+                Sign up here
               </Link>
             </p>
           </div>
