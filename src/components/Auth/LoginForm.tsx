@@ -198,34 +198,6 @@ export function LoginForm() {
             </div>
           </form>
 
-          {/* Demo Login Buttons */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center mb-3">Demo accounts:</p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => handleDemoLogin('developer')}
-                disabled={loading}
-                className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors disabled:opacity-50"
-              >
-                Developer
-              </button>
-              <button
-                onClick={() => handleDemoLogin('admin')}
-                disabled={loading}
-                className="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors disabled:opacity-50"
-              >
-                Admin
-              </button>
-              <button
-                onClick={() => handleDemoLogin('player')}
-                disabled={loading}
-                className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
-              >
-                Player
-              </button>
-            </div>
-          </div>
-
           <div className="text-center mt-6">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
