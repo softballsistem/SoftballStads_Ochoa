@@ -9,25 +9,27 @@ export function Layout() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/login');
-  };
-
+  // Don't render if still loading
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Cargando...</p>
         </div>
       </div>
     );
   }
 
+  // Don't render if no user
   if (!user) {
-    return null; // Let the router handle redirects
+    return null;
   }
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   const navigationItems = [
     {

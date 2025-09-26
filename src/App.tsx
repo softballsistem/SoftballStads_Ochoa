@@ -18,12 +18,13 @@ import { UserManagement } from './pages/Admin/UserManagement';
 function AppRoutes() {
   const { user, loading } = useAuth();
 
+  // Show loading only for a brief moment during initial auth check
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading application...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Cargando...</p>
         </div>
       </div>
     );
@@ -31,8 +32,17 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginForm />} />
-      <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <SignUpForm />} />
+      {/* Public routes */}
+      <Route 
+        path="/login" 
+        element={user ? <Navigate to="/dashboard" replace /> : <LoginForm />} 
+      />
+      <Route 
+        path="/signup" 
+        element={user ? <Navigate to="/dashboard" replace /> : <SignUpForm />} 
+      />
+      
+      {/* Protected routes */}
       <Route
         path="/"
         element={
@@ -79,6 +89,9 @@ function AppRoutes() {
           </ProtectedRoute>
         } />
       </Route>
+      
+      {/* Fallback route */}
+      <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
     </Routes>
   );
 }

@@ -16,32 +16,52 @@ export function useAuth(): AuthContextType {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Error getting session:', error);
-        setError('Failed to load session');
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          setError('Failed to load session');
+          setLoading(false);
+          setInitialized(true);
+          return;
+        }
+
+        if (session?.user) {
+          await loadUserProfile(session.user);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        if (mounted) {
+          console.error('Auth initialization error:', err);
+          setError('Failed to initialize authentication');
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
       }
-      setSession(session);
-      if (session?.user) {
-        loadUserProfile(session.user);
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
-      setSession(session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted || !initialized) return;
+
       setError(null);
       
       if (session?.user) {
@@ -52,14 +72,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
-    setError(null);
-    setLoading(true);
-    
     try {
+      setLoading(true);
+      
       // Check if user profile exists
       const { data: existingProfile, error: fetchError } = await supabase
         .from('user_profiles')
@@ -78,7 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const role = determineRole(supabaseUser.email || '');
         const playerId = generatePlayerId();
         
-        // Generate username from email or use default
         let username = supabaseUser.email?.split('@')[0] || 'user';
         
         // Special handling for super user
@@ -117,31 +138,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         userProfile = createdProfile;
       } else {
-        // Verify and update role if necessary
-        const expectedRole = determineRole(supabaseUser.email || '');
-        
-        if (existingProfile.role !== expectedRole) {
-          const { data: updatedProfile, error: updateError } = await supabase
-            .from('user_profiles')
-            .update({ 
-              role: expectedRole, 
-              updated_at: new Date().toISOString() 
-            })
-            .eq('uid', supabaseUser.id)
-            .select()
-            .single();
-
-          if (updateError) {
-            userProfile = existingProfile;
-          } else {
-            userProfile = updatedProfile;
-          }
-        } else {
-          userProfile = existingProfile;
-        }
+        userProfile = existingProfile;
       }
 
-      // Convert database format to app format
+      // Convert to app format
       const appUser: User = {
         uid: userProfile.uid,
         email: userProfile.email,
@@ -154,7 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(appUser);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      console.error('Profile loading error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load profile');
       setUser(null);
     } finally {
       setLoading(false);
@@ -163,7 +164,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (emailOrUsername: string, password: string) => {
     setError(null);
-    setLoading(true);
     
     try {
       // Try to sign in with email first
@@ -195,17 +195,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { data: result.data };
     } catch (error) {
       return { error: 'An unexpected error occurred during sign in' };
-    } finally {
-      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, username: string) => {
     setError(null);
-    setLoading(true);
     
     try {
-      // Validate inputs
       if (!email || !password || !username) {
         return { error: 'All fields are required' };
       }
@@ -248,14 +244,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { data };
     } catch (error) {
       return { error: 'An unexpected error occurred during sign up' };
-    } finally {
-      setLoading(false);
     }
   };
 
   const signInWithGoogle = async () => {
     setError(null);
-    setLoading(true);
     
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -271,10 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return { data };
     } catch (error) {
-      console.error('Unexpected Google sign in error:', error);
       return { error: 'An unexpected error occurred with Google sign in' };
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -284,7 +274,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     
     try {
-      // Validate username format
       if (newUsername.includes(' ')) {
         return { error: 'Username cannot contain spaces. Use underscores instead.' };
       }
@@ -333,7 +322,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(error.message);
       } else {
         setUser(null);
-        setSession(null);
       }
     } catch (error) {
       setError('An unexpected error occurred during sign out');

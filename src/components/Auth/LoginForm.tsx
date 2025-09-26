@@ -9,7 +9,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signInWithGoogle, error: authError, user } = useAuth();
+  const { signIn, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
@@ -18,13 +18,6 @@ export function LoginForm() {
       navigate('/dashboard');
     }
   }, [user, navigate]);
-
-  // Show auth errors
-  useEffect(() => {
-    if (authError) {
-      setError(authError);
-    }
-  }, [authError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,10 +29,10 @@ export function LoginForm() {
       if (error) {
         setError(error);
       } else {
-        navigate('/dashboard');
+        // Navigation will be handled by auth state change
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError('Ocurrió un error inesperado');
     } finally {
       setLoading(false);
     }
@@ -54,9 +47,8 @@ export function LoginForm() {
       if (error) {
         setError(error);
       }
-      // Note: Google OAuth will redirect automatically
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError('Ocurrió un error inesperado');
     } finally {
       setLoading(false);
     }
@@ -81,10 +73,10 @@ export function LoginForm() {
       if (error) {
         setError(error);
       } else {
-        navigate('/dashboard');
+        // Navigation will be handled by auth state change
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError('Ocurrió un error inesperado');
     } finally {
       setLoading(false);
     }
