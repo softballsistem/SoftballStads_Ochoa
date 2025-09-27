@@ -28,13 +28,16 @@ export function LoginForm() {
       const { error } = await signIn(emailOrUsername.trim(), password);
       if (error) {
         setError(error);
+        setLoading(false);
       } else {
-        // Navigation will be handled by auth state change
+        // Success - auth state change will handle navigation
+        // Keep loading true until redirect happens
       }
     } catch (err) {
       setError('Ocurrió un error inesperado');
-    } finally {
       setLoading(false);
+    } finally {
+      // Don't set loading to false here - let successful auth handle it
     }
   };
 

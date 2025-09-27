@@ -52,7 +52,7 @@ export function UserManagement() {
 
     // Prevent user from removing their own developer role
     if (userId === user?.uid && user?.role === 'developer' && newRole !== 'developer') {
-      setError('You cannot remove your own developer privileges.');
+      alert('You cannot remove your own developer privileges.');
       cancelEdit();
       return;
     }
@@ -76,10 +76,11 @@ export function UserManagement() {
           : u
       ));
 
+      alert('User role updated successfully!');
       cancelEdit();
     } catch (error) {
       console.error('Error updating user role:', error);
-      setError('Failed to update user role. Please try again.');
+      alert('Failed to update user role. Please try again.');
     } finally {
       setUpdating(false);
     }

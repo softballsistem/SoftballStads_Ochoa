@@ -17,6 +17,17 @@ import { UserManagement } from './pages/Admin/UserManagement';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Handle navigation after successful authentication
+  React.useEffect(() => {
+    if (user && !loading) {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/login' || currentPath === '/signup' || currentPath === '/') {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, loading, navigate]);
 
   // Show loading only for a brief moment during initial auth check
   if (loading) {

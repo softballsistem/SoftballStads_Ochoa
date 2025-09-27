@@ -43,9 +43,10 @@ export function Games() {
       }
       setShowGameForm(false);
       setEditingGame(null);
-      loadData();
+      await loadData(); // Ensure data is refreshed immediately
     } catch (error) {
       console.error('Error saving game:', error);
+      alert('Error saving game. Please try again.');
     }
   };
 
@@ -58,9 +59,10 @@ export function Games() {
     if (window.confirm('Are you sure you want to delete this game? This will also delete all associated statistics.')) {
       try {
         await gamesApi.delete(gameId);
-        loadData();
+        await loadData(); // Ensure data is refreshed immediately
       } catch (error) {
         console.error('Error deleting game:', error);
+        alert('Error deleting game. Please try again.');
       }
     }
   };
@@ -198,7 +200,15 @@ export function Games() {
                   </button>
                   {game.status === 'scheduled' && (
                     <button
-                      onClick={() => gamesApi.update(game.id, { status: 'in_progress' }).then(loadData)}
+                      onClick={async () => {
+                        try {
+                          await gamesApi.update(game.id, { status: 'in_progress' });
+                          await loadData();
+                        } catch (error) {
+                          console.error('Error updating game status:', error);
+                          alert('Error updating game status. Please try again.');
+                        }
+                      }}
                       className="bg-green-50 text-green-700 text-sm font-medium py-2 px-4 rounded-md hover:bg-green-100 transition-colors"
                     >
                       Start Game
@@ -206,7 +216,15 @@ export function Games() {
                   )}
                   {game.status === 'in_progress' && (
                     <button
-                      onClick={() => gamesApi.update(game.id, { status: 'completed' }).then(loadData)}
+                      onClick={async () => {
+                        try {
+                          await gamesApi.update(game.id, { status: 'completed' });
+                          await loadData();
+                        } catch (error) {
+                          console.error('Error updating game status:', error);
+                          alert('Error updating game status. Please try again.');
+                        }
+                      }}
                       className="bg-orange-50 text-orange-700 text-sm font-medium py-2 px-4 rounded-md hover:bg-orange-100 transition-colors"
                     >
                       End Game

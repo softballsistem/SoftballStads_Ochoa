@@ -15,6 +15,7 @@ type PlayerStat = Database['public']['Tables']['player_stats']['Row'];
 
 // Enhanced error handling
 const handleApiError = (error: any, operation: string) => {
+  console.error(`API Error - ${operation}:`, error);
   throw new Error(`Failed to ${operation}: ${error.message || 'Unknown error'}`);
 };
 

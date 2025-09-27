@@ -85,9 +85,12 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
         playerStatsApi.upsert(stat)
       );
       await Promise.all(promises);
+      // Show success message
+      alert('Statistics saved successfully!');
       onClose();
     } catch (error) {
       console.error('Error saving stats:', error);
+      alert('Error saving statistics. Please try again.');
     } finally {
       setSaving(false);
     }

@@ -42,9 +42,10 @@ export function Players() {
       }
       setShowForm(false);
       setEditingPlayer(null);
-      loadData();
+      await loadData(); // Ensure data is refreshed immediately
     } catch (error) {
       console.error('Error saving player:', error);
+      alert('Error saving player. Please try again.');
     }
   };
 
@@ -57,9 +58,10 @@ export function Players() {
     if (window.confirm('Are you sure you want to delete this player? This will also delete all associated statistics.')) {
       try {
         await playersApi.delete(playerId);
-        loadData();
+        await loadData(); // Ensure data is refreshed immediately
       } catch (error) {
         console.error('Error deleting player:', error);
+        alert('Error deleting player. Please try again.');
       }
     }
   };

@@ -46,9 +46,11 @@ export function Teams() {
       }
       setShowForm(false);
       setEditingTeam(null);
-      loadTeams();
+      await loadTeams(); // Ensure data is refreshed immediately
     } catch (error) {
       console.error('Error saving team:', error);
+      // Show error message to user
+      alert('Error saving team. Please try again.');
     }
   };
 
@@ -61,9 +63,10 @@ export function Teams() {
     if (window.confirm('Are you sure you want to delete this team? This will also delete all associated players and statistics.')) {
       try {
         await teamsApi.delete(teamId);
-        loadTeams();
+        await loadTeams(); // Ensure data is refreshed immediately
       } catch (error) {
         console.error('Error deleting team:', error);
+        alert('Error deleting team. Please try again.');
       }
     }
   };

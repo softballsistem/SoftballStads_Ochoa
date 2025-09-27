@@ -164,6 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (emailOrUsername: string, password: string) => {
     setError(null);
+    setLoading(true);
     
     try {
       // Try to sign in with email first
@@ -189,32 +190,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (result.error) {
+        setLoading(false);
         return { error: result.error.message };
       }
 
+      // Don't set loading to false here - let the auth state change handle it
       return { data: result.data };
     } catch (error) {
+      setLoading(false);
       return { error: 'An unexpected error occurred during sign in' };
     }
   };
 
   const signUp = async (email: string, password: string, username: string) => {
     setError(null);
+    setLoading(true);
     
     try {
       if (!email || !password || !username) {
+        setLoading(false);
         return { error: 'All fields are required' };
       }
 
       if (password.length < 6) {
+        setLoading(false);
         return { error: 'Password must be at least 6 characters long' };
       }
 
       if (username.length < 3) {
+        setLoading(false);
         return { error: 'Username must be at least 3 characters long' };
       }
 
       if (username.includes(' ')) {
+        setLoading(false);
         return { error: 'Username cannot contain spaces. Use underscores instead.' };
       }
 
@@ -226,6 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (existingUser) {
+        setLoading(false);
         return { error: 'Username already exists' };
       }
 
@@ -238,11 +248,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
+        setLoading(false);
         return { error: error.message };
       }
 
+      setLoading(false);
       return { data };
     } catch (error) {
+      setLoading(false);
       return { error: 'An unexpected error occurred during sign up' };
     }
   };
