@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Shield, Edit2, Save, X, AlertTriangle } from 'lucide-react';
+import { Users, Shield, CreditCard as Edit2, Save, X, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { ROLE_HIERARCHY } from '../../config/roles';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Calendar, MapPin, Trophy } from 'lucide-react';
+import { Plus, CreditCard as Edit2, Trash2, Calendar, MapPin, Trophy } from 'lucide-react';
 import { gamesApi, teamsApi } from '../services/api';
 import type { GameWithTeamNames, Team } from '../lib/supabase';
 import { GameForm } from '../components/Games/GameForm';

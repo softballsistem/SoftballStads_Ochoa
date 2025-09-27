@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Users, Trophy } from 'lucide-react';
+import { Plus, CreditCard as Edit2, Trash2, Users, Trophy } from 'lucide-react';
 import { teamsApi, playersApi } from '../services/api';
 import type { Team, PlayerWithTeamAndStats } from '../lib/supabase';
 import { TeamForm } from '../components/Teams/TeamForm';
