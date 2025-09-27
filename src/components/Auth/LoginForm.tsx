@@ -22,22 +22,22 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
     try {
+      setLoading(true);
       const { error } = await signIn(emailOrUsername.trim(), password);
       if (error) {
         setError(error);
-        setLoading(false);
       } else {
-        // Success - auth state change will handle navigation
-        // Keep loading true until redirect happens
+        // Success - let auth state handle the redirect
+        // Don't set loading to false, let the redirect happen
       }
     } catch (err) {
       setError('Ocurrió un error inesperado');
-      setLoading(false);
     } finally {
-      // Don't set loading to false here - let successful auth handle it
+      if (error) {
+        setLoading(false);
+      }
     }
   };
 

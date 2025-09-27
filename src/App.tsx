@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth.tsx';
 import { useAuth } from './hooks/useAuth.tsx';
 import { Layout } from './components/Layout';
@@ -17,19 +17,8 @@ import { UserManagement } from './pages/Admin/UserManagement';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
 
-  // Handle navigation after successful authentication
-  React.useEffect(() => {
-    if (user && !loading) {
-      const currentPath = window.location.pathname;
-      if (currentPath === '/login' || currentPath === '/signup' || currentPath === '/') {
-        navigate('/dashboard', { replace: true });
-      }
-    }
-  }, [user, loading, navigate]);
-
-  // Show loading only for a brief moment during initial auth check
+  // Show loading screen only briefly
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

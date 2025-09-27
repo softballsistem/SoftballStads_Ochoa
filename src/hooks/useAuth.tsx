@@ -18,7 +18,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -26,32 +25,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       try {
         // Get initial session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (!mounted) return;
-
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          setError('Failed to load session');
-          setLoading(false);
-          setInitialized(true);
-          return;
-        }
 
         if (session?.user) {
           await loadUserProfile(session.user);
         } else {
           setUser(null);
+          setLoading(false);
         }
       } catch (err) {
+        console.error('Auth initialization error:', err);
         if (mounted) {
-          console.error('Auth initialization error:', err);
           setError('Failed to initialize authentication');
-        }
-      } finally {
-        if (mounted) {
           setLoading(false);
-          setInitialized(true);
         }
       }
     };
@@ -60,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted || !initialized) return;
+      if (!mounted) return;
 
       setError(null);
       
@@ -80,8 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
-      setLoading(true);
-      
       // Check if user profile exists
       const { data: existingProfile, error: fetchError } = await supabase
         .from('user_profiles')
@@ -153,18 +139,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
 
       setUser(appUser);
+      setLoading(false);
     } catch (error) {
       console.error('Profile loading error:', error);
       setError(error instanceof Error ? error.message : 'Failed to load profile');
       setUser(null);
-    } finally {
       setLoading(false);
     }
   };
 
   const signIn = async (emailOrUsername: string, password: string) => {
     setError(null);
-    setLoading(true);
     
     try {
       // Try to sign in with email first
@@ -190,40 +175,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (result.error) {
-        setLoading(false);
         return { error: result.error.message };
       }
 
-      // Don't set loading to false here - let the auth state change handle it
       return { data: result.data };
     } catch (error) {
-      setLoading(false);
       return { error: 'An unexpected error occurred during sign in' };
     }
   };
 
   const signUp = async (email: string, password: string, username: string) => {
     setError(null);
-    setLoading(true);
     
     try {
       if (!email || !password || !username) {
-        setLoading(false);
         return { error: 'All fields are required' };
       }
 
       if (password.length < 6) {
-        setLoading(false);
         return { error: 'Password must be at least 6 characters long' };
       }
 
       if (username.length < 3) {
-        setLoading(false);
         return { error: 'Username must be at least 3 characters long' };
       }
 
       if (username.includes(' ')) {
-        setLoading(false);
         return { error: 'Username cannot contain spaces. Use underscores instead.' };
       }
 
@@ -235,7 +212,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (existingUser) {
-        setLoading(false);
         return { error: 'Username already exists' };
       }
 
@@ -248,14 +224,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        setLoading(false);
         return { error: error.message };
       }
 
-      setLoading(false);
       return { data };
     } catch (error) {
-      setLoading(false);
       return { error: 'An unexpected error occurred during sign up' };
     }
   };
