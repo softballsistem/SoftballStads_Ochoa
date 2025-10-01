@@ -2,11 +2,11 @@
 export const DEVELOPER_EMAILS = [
   'hedrichdev@gmail.com',
   'developer@softballstats.com',
-  'admin@example.com',
   // Add more developer emails here
 ];
 
 export const ADMIN_EMAILS = [
+  'admin@example.com',
   'coach@team1.com',
   'manager@league.com',
   'admin@softballstats.com',

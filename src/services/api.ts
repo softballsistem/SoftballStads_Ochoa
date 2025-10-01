@@ -568,5 +568,73 @@ export const userApi = {
       handleApiError(error, 'update user role');
       throw error;
     }
+  },
+
+  async createRoleChangeRequest(targetUserId: string, currentRole: string, requestedRole: string, reason?: string) {
+    try {
+      const { data, error } = await supabase
+        .from('role_change_requests')
+        .insert({
+          target_user_id: targetUserId,
+          current_role: currentRole,
+          requested_role: requestedRole,
+          reason: reason || null,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) handleApiError(error, 'create role change request');
+      return data;
+    } catch (error) {
+      handleApiError(error, 'create role change request');
+      throw error;
+    }
+  },
+
+  async getRoleChangeRequests() {
+    try {
+      const { data, error } = await supabase
+        .from('role_change_requests')
+        .select(`
+          *,
+          requester:user_profiles!role_change_requests_requester_id_fkey(username, email, role),
+          target_user:user_profiles!role_change_requests_target_user_id_fkey(username, email, role),
+          reviewer:user_profiles!role_change_requests_reviewed_by_fkey(username, email, role)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) handleApiError(error, 'fetch role change requests');
+      return data || [];
+    } catch (error) {
+      handleApiError(error, 'fetch role change requests');
+      return [];
+    }
+  },
+
+  async reviewRoleChangeRequest(requestId: string, status: 'approved' | 'rejected') {
+    try {
+      const { data, error } = await supabase
+        .from('role_change_requests')
+        .update({
+          status,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', requestId)
+        .select()
+        .single();
+
+      if (error) handleApiError(error, 'review role change request');
+
+      // Si se aprueba, actualizar el rol del usuario
+      if (status === 'approved' && data) {
+        await this.updateUserRole(data.target_user_id, data.requested_role);
+      }
+
+      return data;
+    } catch (error) {
+      handleApiError(error, 'review role change request');
+      throw error;
+    }
   }
 };
