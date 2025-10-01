@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Shield, Edit2, Save, X, AlertTriangle, Clock, Check, Ban, Eye, UserPlus, Bell } from 'lucide-react';
+import { Users, Shield, CreditCard as Edit2, Save, X, AlertTriangle, Clock, Check, Ban, Eye, UserPlus, Bell } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { userApi } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
