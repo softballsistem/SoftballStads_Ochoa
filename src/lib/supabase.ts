@@ -18,6 +18,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    flowType: 'pkce'
   },
   global: {
     fetch: async (url, options = {}) => {
@@ -33,6 +34,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
             console.warn(`Supabase service unavailable (503), retrying in ${retryDelay}ms... (attempt ${attempt}/${maxRetries})`);
             await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
             continue;
+          }
+          
+          // Handle other common errors
+          if (response.status === 401) {
+            console.warn('Supabase authentication error (401)');
+          }
+          
+          if (response.status === 403) {
+            console.warn('Supabase permission error (403)');
+          }
+          
+          if (response.status >= 500) {
+            console.warn(`Supabase server error (${response.status})`);
           }
           
           // If still 503 on final attempt, provide helpful error
@@ -55,6 +69,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
           await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
         }
       }
+    },
+    headers: {
+      'X-Client-Info': 'supabase-js-web'
     }
   }
 });

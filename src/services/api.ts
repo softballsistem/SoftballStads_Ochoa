@@ -16,6 +16,24 @@ type PlayerStat = Database['public']['Tables']['player_stats']['Row'];
 // Enhanced error handling
 const handleApiError = (error: any, operation: string) => {
   console.error(`API Error - ${operation}:`, error);
+  
+  // Provide more specific error messages
+  if (error?.code === 'PGRST301') {
+    throw new Error(`Database connection error during ${operation}. Please check your internet connection.`);
+  }
+  
+  if (error?.code === '42P01') {
+    throw new Error(`Database table not found during ${operation}. Please ensure the database is properly set up.`);
+  }
+  
+  if (error?.message?.includes('JWT')) {
+    throw new Error(`Authentication error during ${operation}. Please log in again.`);
+  }
+  
+  if (error?.message?.includes('RLS')) {
+    throw new Error(`Permission error during ${operation}. You may not have the required permissions.`);
+  }
+  
   throw new Error(`Failed to ${operation}: ${error.message || 'Unknown error'}`);
 };
 

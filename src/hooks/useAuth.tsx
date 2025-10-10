@@ -68,6 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
+      console.log('Loading user profile for:', supabaseUser.email);
+      
       // Check if user profile exists
       const { data: existingProfile, error: fetchError } = await supabase
         .from('user_profiles')
@@ -76,12 +78,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error fetching user profile:', fetchError);
         throw new Error('Failed to load user profile');
       }
 
       let userProfile: UserProfile;
 
       if (!existingProfile) {
+        console.log('Creating new user profile for:', supabaseUser.email);
+        
         // Create new user profile
         const role = determineRole(supabaseUser.email || '');
         const playerId = generatePlayerId();
@@ -119,11 +124,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single();
 
         if (createError) {
+          console.error('Error creating user profile:', createError);
           throw new Error('Failed to create user profile');
         }
 
+        console.log('User profile created successfully:', createdProfile);
         userProfile = createdProfile;
       } else {
+        console.log('Using existing user profile:', existingProfile);
         userProfile = existingProfile;
       }
 
@@ -138,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updatedAt: userProfile.updated_at,
       };
 
+      console.log('User profile loaded successfully:', appUser);
       setUser(appUser);
       setLoading(false);
     } catch (error) {
