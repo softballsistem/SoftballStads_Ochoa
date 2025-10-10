@@ -19,6 +19,44 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
+  global: {
+    fetch: async (url, options = {}) => {
+      const maxRetries = 3;
+      const retryDelay = 1000; // 1 second
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const response = await fetch(url, options);
+          
+          // If we get a 503, retry after delay
+          if (response.status === 503 && attempt < maxRetries) {
+            console.warn(`Supabase service unavailable (503), retrying in ${retryDelay}ms... (attempt ${attempt}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+            continue;
+          }
+          
+          // If still 503 on final attempt, provide helpful error
+          if (response.status === 503) {
+            throw new Error('Supabase service is temporarily unavailable. Please check your Supabase project status at https://supabase.com/dashboard and try again in a few minutes.');
+          }
+          
+          return response;
+        } catch (error) {
+          if (attempt === maxRetries) {
+            // On final attempt, provide more context
+            if (error instanceof Error && error.message.includes('503')) {
+              throw error;
+            }
+            throw new Error(`Failed to connect to Supabase after ${maxRetries} attempts. Please verify your Supabase project is active and your network connection is stable.`);
+          }
+          
+          // Wait before retrying
+          console.warn(`Connection attempt ${attempt} failed, retrying...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        }
+      }
+    }
+  }
 });
 
 export type Database = {
