@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Shield, CreditCard as Edit2, Save, X, AlertTriangle, Clock, Check, Ban, Eye, UserPlus, Bell } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+
 import { userApi } from '../../services/api';
-import { useAuth } from '../../hooks/useAuth';
-import { ROLE_HIERARCHY, getRoleColor, getRoleDescription } from '../../config/roles';
+import { useAuth } from '../../hooks/useAuthHook';
+import { getRoleDescription } from '../../config/roles';
 
 interface RoleChangeRequest {
   id: string;
@@ -21,9 +21,11 @@ interface RoleChangeRequest {
   reviewer?: { username: string; email: string; role: string };
 }
 
+import { User } from '../../types/auth';
+
 export function UserManagement() {
   const { user, hasPermission } = useAuth();
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [roleChangeRequests, setRoleChangeRequests] = useState<RoleChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<string | null>(null);
@@ -35,13 +37,7 @@ export function UserManagement() {
   const isDeveloper = user?.role === 'developer';
   const isAdmin = user?.role === 'admin';
 
-  useEffect(() => {
-    if (hasPermission('ACCESS_ADMIN')) {
-      loadData();
-    }
-  }, [hasPermission]);
-
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     try {
       const [usersData, requestsData] = await Promise.all([
         userApi.getAllUsers(),
@@ -55,7 +51,13 @@ export function UserManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isDeveloper]);
+
+  useEffect(() => {
+    if (hasPermission('ACCESS_ADMIN')) {
+      loadData();
+    }
+  }, [hasPermission, loadData]);
 
   const startEdit = (userId: string, currentRole: string) => {
     setEditingUser(userId);
@@ -69,7 +71,7 @@ export function UserManagement() {
     setReason('');
   };
 
-  const handleRoleChange = async (userId: string, targetUser: any) => {
+  const handleRoleChange = async (userId: string, targetUser: User) => {
     if (!newRole || newRole === targetUser.role) {
       cancelEdit();
       return;

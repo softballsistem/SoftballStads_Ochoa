@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Users, Trophy, Calendar, BarChart3, Settings, UserCheck } from 'lucide-react';
-import { teamsApi, playersApi, gamesApi } from '../../services/api';
-import type { Team, PlayerWithTeamAndStats, GameWithTeamNames } from '../../lib/supabase';
-import { useAuth } from '../../hooks/useAuth';
+import { Shield, Users, Trophy, Calendar, BarChart3, UserCheck } from 'lucide-react';
+import type { GameWithTeamNames } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuthHook';
 
 export function AdminDashboard() {
   const { user, hasPermission } = useAuth();
@@ -151,7 +150,7 @@ export function AdminDashboard() {
             <p className="text-gray-500 text-sm">No recent activity.</p>
           ) : (
             <div className="space-y-4">
-              {stats.recentActivity.map((game: any) => (
+              {stats.recentActivity.map((game: GameWithTeamNames) => (
                 <div key={game.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">

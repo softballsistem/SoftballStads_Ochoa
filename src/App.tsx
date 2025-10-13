@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth.tsx';
-import { useAuth } from './hooks/useAuth.tsx';
+import { useAuth } from './hooks/useAuthHook';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginForm } from './components/Auth/LoginForm';

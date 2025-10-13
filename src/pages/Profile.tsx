@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuthHook';
 import { User, Mail, Hash, Shield, Copy, Check, Edit2, Save, X } from 'lucide-react';
 
 export function Profile() {

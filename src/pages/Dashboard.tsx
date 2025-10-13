@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Users, Calendar, TrendingUp } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { teamsApi, playersApi, gamesApi, calculatePlayerStats } from '../services/api';
 import { TeamLogo } from '../components/UI/TeamLogo';
-import type { Team, PlayerWithTeamAndStats, GameWithTeamNames } from '../lib/supabase';
+import type { PlayerWithTeamAndStats, GameWithTeamNames } from '../lib/supabase';
+import { TeamStat } from '../types';
 
 export function Dashboard() {
   const [stats, setStats] = useState({
@@ -13,7 +14,7 @@ export function Dashboard() {
     recentGames: [] as GameWithTeamNames[],
   });
   const [topPerformers, setTopPerformers] = useState<(PlayerWithTeamAndStats & ReturnType<typeof calculatePlayerStats>)[]>([]);
-  const [teamStats, setTeamStats] = useState<any[]>([]);
+  const [teamStats, setTeamStats] = useState<TeamStat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -193,7 +194,7 @@ export function Dashboard() {
             <p className="text-gray-500 text-sm">No games recorded yet.</p>
           ) : (
             <div className="space-y-4">
-              {stats.recentGames.map((game: any) => (
+              {stats.recentGames.map((game: GameWithTeamNames) => (
                 <div key={game.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
                     <div className="flex items-center space-x-3 mb-2">

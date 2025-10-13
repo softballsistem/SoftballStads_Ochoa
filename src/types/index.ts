@@ -69,3 +69,11 @@ export interface PlayerFormData {
   team_id: string | null;
   date_of_birth: string | null;
 }
+
+export interface TeamStat {
+  name: string;
+  runs: number;
+  hits: number;
+  avg: number;
+  players: number;
+}

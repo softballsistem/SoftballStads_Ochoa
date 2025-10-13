@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuthHook';
 import { BarChart3, Users, Trophy, Calendar, LogOut, User, Settings, Shield, Menu, X } from 'lucide-react';
 import { getRoleColor } from '../config/roles';
 

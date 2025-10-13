@@ -5,8 +5,8 @@ import type { GameWithTeamNames, Team } from '../lib/supabase';
 import { GameForm } from '../components/Games/GameForm';
 import { StatsEntryForm } from '../components/Games/StatsEntryForm';
 import { TeamLogo } from '../components/UI/TeamLogo';
-import { TeamLogo } from '../components/UI/TeamLogo';
 import { Modal } from '../components/UI/Modal';
+import { GameFormData } from '../types';
 
 export function Games() {
   const [games, setGames] = useState<GameWithTeamNames[]>([]);
@@ -36,7 +36,7 @@ export function Games() {
     }
   };
 
-  const handleGameSubmit = async (gameData: any) => {
+  const handleGameSubmit = async (gameData: GameFormData) => {
     try {
       if (editingGame) {
         await gamesApi.update(editingGame.id, gameData);

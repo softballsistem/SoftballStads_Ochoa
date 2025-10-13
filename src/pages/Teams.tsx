@@ -4,8 +4,8 @@ import { teamsApi, playersApi } from '../services/api';
 import type { Team, PlayerWithTeamAndStats } from '../lib/supabase';
 import { TeamForm } from '../components/Teams/TeamForm';
 import { TeamLogo } from '../components/UI/TeamLogo';
-import { TeamLogo } from '../components/UI/TeamLogo';
 import { Modal } from '../components/UI/Modal';
+import { TeamFormData } from '../types';
 
 export function Teams() {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -39,7 +39,7 @@ export function Teams() {
     }
   };
 
-  const handleSubmit = async (teamData: any) => {
+  const handleSubmit = async (teamData: TeamFormData) => {
     try {
       if (editingTeam) {
         await teamsApi.update(editingTeam.id, teamData);

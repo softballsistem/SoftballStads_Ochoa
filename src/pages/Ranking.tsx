@@ -79,7 +79,16 @@ export function Ranking() {
     }
   };
 
-  const RankingCard = ({ title, players, statKey, statLabel, icon, bgColor = "bg-white" }: any) => (
+  interface RankingCardProps {
+  title: string;
+  players: (PlayerWithTeamAndStats & ReturnType<typeof calculatePlayerStats>)[];
+  statKey: keyof (PlayerWithTeamAndStats & ReturnType<typeof calculatePlayerStats>);
+  statLabel: string;
+  icon: React.ReactNode;
+  bgColor?: string;
+}
+
+const RankingCard = ({ title, players, statKey, statLabel, icon, bgColor = "bg-white" }: RankingCardProps) => (
     <div className={`${bgColor} rounded-lg shadow-sm border border-gray-200 p-6`}>
       <div className="flex items-center space-x-2 mb-4">
         {icon}
@@ -91,7 +100,7 @@ export function Ranking() {
         </div>
       ) : (
         <div className="space-y-3">
-          {players.map((player: any, index: number) => (
+          {players.map((player, index: number) => (
             <div key={player.id} className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">

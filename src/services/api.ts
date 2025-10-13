@@ -15,7 +15,7 @@ type Game = Database['public']['Tables']['games']['Row'];
 type PlayerStat = Database['public']['Tables']['player_stats']['Row'];
 
 // Enhanced error handling
-const handleApiError = (error: any, operation: string) => {
+const handleApiError = (error: { code?: string; message?: string } | null, operation: string) => {
   console.error(`API Error - ${operation}:`, error);
   
   // Provide more specific error messages

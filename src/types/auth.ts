@@ -1,4 +1,4 @@
-import { PERMISSIONS, type Permission } from '../config/roles';
+import type { Permission } from '../config/roles';
 
 export interface User {
   uid: string;
@@ -14,9 +14,9 @@ export interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  signIn: (emailOrUsername: string, password: string) => Promise<{ error?: string; data?: any }>;
-  signUp: (email: string, password: string, username: string) => Promise<{ error?: string; data?: any }>;
-  signInWithGoogle: () => Promise<{ error?: string; data?: any }>;
+  signIn: (emailOrUsername: string, password: string) => Promise<{ error?: string; data?: unknown }>;
+  signUp: (email: string, password: string, username: string) => Promise<{ error?: string; data?: unknown }>;
+  signInWithGoogle: () => Promise<{ error?: string; data?: unknown }>;
   signOut: () => Promise<void>;
   updateUsername: (newUsername: string) => Promise<{ error?: string }>;
   hasPermission: (requiredPermission: Permission) => boolean;
@@ -49,6 +49,6 @@ export interface AuthError {
 }
 
 export interface AuthResponse {
-  data?: any;
+  data?: unknown;
   error?: string;
 }

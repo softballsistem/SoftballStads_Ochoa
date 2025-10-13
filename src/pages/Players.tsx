@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit2, Trash2, User, Trophy } from 'lucide-react';
+import { Plus, CreditCard as Edit2, Trash2, User } from 'lucide-react';
 import { playersApi, teamsApi, calculatePlayerStats } from '../services/api';
 import type { PlayerWithTeamAndStats, Team } from '../lib/supabase';
 import { PlayerForm } from '../components/Players/PlayerForm';
 import { Modal } from '../components/UI/Modal';
+import { PlayerFormData } from '../types';
 
 export function Players() {
   const [players, setPlayers] = useState<PlayerWithTeamAndStats[]>([]);
@@ -33,7 +34,7 @@ export function Players() {
     }
   };
 
-  const handleSubmit = async (playerData: any) => {
+  const handleSubmit = async (playerData: PlayerFormData) => {
     try {
       if (editingPlayer) {
         await playersApi.update(editingPlayer.id, playerData);

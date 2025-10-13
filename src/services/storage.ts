@@ -31,7 +31,7 @@ export const storageService = {
       await this.deleteTeamLogo(teamId);
 
       // Subir archivo
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('team-logos')
         .upload(filePath, file, {
           cacheControl: '3600',
