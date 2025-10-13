@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trophy, ImageIcon, AlertCircle } from 'lucide-react';
+import { Trophy, Image as ImageIcon, AlertCircle } from 'lucide-react';
 
 interface TeamLogoProps {
   logoUrl?: string | null;
