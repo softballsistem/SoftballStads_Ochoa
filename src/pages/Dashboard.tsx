@@ -202,6 +202,11 @@ export function Dashboard() {
                         teamName={game.home_team?.name || 'TBD'} 
                         size="small" 
                       />
+                      <TeamLogo 
+                        logoUrl={game.home_team?.logo_url} 
+                        teamName={game.home_team?.name || 'TBD'} 
+                        size="small" 
+                      />
                       <span className="font-medium text-gray-900">
                         {game.home_team?.name || 'TBD'}
                       </span>
@@ -209,6 +214,11 @@ export function Dashboard() {
                       <span className="font-medium text-gray-900">
                         {game.away_team?.name || 'TBD'}
                       </span>
+                      <TeamLogo 
+                        logoUrl={game.away_team?.logo_url} 
+                        teamName={game.away_team?.name || 'TBD'} 
+                        size="small" 
+                      />
                       <TeamLogo 
                         logoUrl={game.away_team?.logo_url} 
                         teamName={game.away_team?.name || 'TBD'} 

@@ -4,6 +4,7 @@ import { teamsApi, playersApi } from '../services/api';
 import type { Team, PlayerWithTeamAndStats } from '../lib/supabase';
 import { TeamForm } from '../components/Teams/TeamForm';
 import { TeamLogo } from '../components/UI/TeamLogo';
+import { TeamLogo } from '../components/UI/TeamLogo';
 import { Modal } from '../components/UI/Modal';
 
 export function Teams() {
@@ -119,6 +120,12 @@ export function Teams() {
             <div key={team.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
+                  <TeamLogo 
+                    logoUrl={team.logo_url} 
+                    teamName={team.name} 
+                    size="large" 
+                    className="mr-3" 
+                  />
                   <TeamLogo 
                     logoUrl={team.logo_url} 
                     teamName={team.name} 

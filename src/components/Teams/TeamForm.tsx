@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { TeamLogoUpload } from '../UI/TeamLogo';
+import { TeamLogoUpload } from '../UI/TeamLogo';
 
 interface TeamFormProps {
   team?: any;
@@ -10,6 +11,7 @@ interface TeamFormProps {
 
 export function TeamForm({ team, onSubmit, onCancel }: TeamFormProps) {
   const [loading, setLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(team?.logo_url || null);
   const [logoUrl, setLogoUrl] = useState(team?.logo_url || null);
   
   const {
@@ -36,8 +38,25 @@ export function TeamForm({ team, onSubmit, onCancel }: TeamFormProps) {
   const handleLogoUpdate = (newLogoUrl: string) => {
     setLogoUrl(newLogoUrl);
   };
+  const handleLogoUpdate = (newLogoUrl: string) => {
+    setLogoUrl(newLogoUrl);
+  };
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      {/* Logo Upload Section */}
+      {team && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Logo del Equipo
+          </label>
+          <TeamLogoUpload
+            teamId={team.id}
+            currentLogoUrl={logoUrl}
+            onLogoUpdate={handleLogoUpdate}
+          />
+        </div>
+      )}
+
       {/* Logo Upload Section */}
       {team && (
         <div>

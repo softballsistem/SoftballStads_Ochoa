@@ -5,6 +5,7 @@ import type { GameWithTeamNames, Team } from '../lib/supabase';
 import { GameForm } from '../components/Games/GameForm';
 import { StatsEntryForm } from '../components/Games/StatsEntryForm';
 import { TeamLogo } from '../components/UI/TeamLogo';
+import { TeamLogo } from '../components/UI/TeamLogo';
 import { Modal } from '../components/UI/Modal';
 
 export function Games() {
@@ -167,6 +168,11 @@ export function Games() {
                     teamName={game.home_team?.name || 'Home'} 
                     size="medium" 
                   />
+                  <TeamLogo 
+                    logoUrl={game.home_team?.logo_url} 
+                    teamName={game.home_team?.name || 'Home'} 
+                    size="medium" 
+                  />
                   <div className="text-center">
                     <div className="text-3xl font-bold text-gray-900">
                       {game.home_score}
@@ -195,6 +201,11 @@ export function Games() {
                   <div className="text-sm text-gray-600">
                     {game.away_team?.name || 'Away'}
                   </div>
+                  <TeamLogo 
+                    logoUrl={game.away_team?.logo_url} 
+                    teamName={game.away_team?.name || 'Away'} 
+                    size="medium" 
+                  />
                   <TeamLogo 
                     logoUrl={game.away_team?.logo_url} 
                     teamName={game.away_team?.name || 'Away'} 
