@@ -1,12 +1,10 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { User, AuthContextType, UserProfile } from '../types/auth';
 import { determineRole, generatePlayerId, hasPermission, type Permission } from '../config/roles';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// eslint-disable-next-line react-refresh/only-export-components
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -29,8 +27,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setLoading(false);
         }
-      } catch (err) {
-        console.error('Auth initialization error:', err);
+      } catch {
+        console.error('Auth initialization error:');
         if (mounted) {
           setError('Failed to initialize authentication');
           setLoading(false);
@@ -182,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return { data: result.data };
-    } catch (_) {
+    } catch {
       return { error: 'An unexpected error occurred during sign in' };
     }
   };
@@ -231,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return { data };
-    } catch (_) {
+    } catch {
       return { error: 'An unexpected error occurred during sign up' };
     }
   };
@@ -252,7 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return { data };
-    } catch (_) {
+    } catch {
       return { error: 'An unexpected error occurred with Google sign in' };
     }
   };
@@ -297,7 +295,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser({ ...user, username: newUsername });
       return {};
-    } catch (_) {
+    } catch {
       return { error: 'An unexpected error occurred' };
     }
   };
@@ -312,7 +310,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUser(null);
       }
-    } catch (_) {
+    } catch {
       setError('An unexpected error occurred during sign out');
     }
   };

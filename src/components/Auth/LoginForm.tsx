@@ -32,7 +32,7 @@ export function LoginForm() {
         // Success - let auth state handle the redirect
         // Don't set loading to false, let the redirect happen
       }
-    } catch (_) {
+    } catch {
       setError('Ocurrió un error inesperado');
     } finally {
       if (error) {
@@ -50,7 +50,7 @@ export function LoginForm() {
       if (error) {
         setError(error);
       }
-    } catch (_) {
+    } catch {
       setError('Ocurrió un error inesperado');
     } finally {
       setLoading(false);
