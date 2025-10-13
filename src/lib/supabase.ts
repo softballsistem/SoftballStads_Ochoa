@@ -86,7 +86,6 @@ export type Database = {
           coach: string | null;
           season: string;
           logo_url: string | null;
-          logo_url: string | null;
           created_at: string;
         };
         Insert: {
@@ -95,7 +94,6 @@ export type Database = {
           coach?: string | null;
           season?: string;
           logo_url?: string | null;
-          logo_url?: string | null;
           created_at?: string;
         };
         Update: {
@@ -103,7 +101,6 @@ export type Database = {
           name?: string;
           coach?: string | null;
           season?: string;
-          logo_url?: string | null;
           logo_url?: string | null;
           created_at?: string;
         };
