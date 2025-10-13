@@ -4,6 +4,7 @@ import { gamesApi, teamsApi } from '../services/api';
 import type { GameWithTeamNames, Team } from '../lib/supabase';
 import { GameForm } from '../components/Games/GameForm';
 import { StatsEntryForm } from '../components/Games/StatsEntryForm';
+import { TeamLogo } from '../components/UI/TeamLogo';
 import { Modal } from '../components/UI/Modal';
 
 export function Games() {
@@ -159,13 +160,20 @@ export function Games() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">
-                    {game.home_score}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {game.home_team?.name || 'Home'}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <TeamLogo 
+                    logoUrl={game.home_team?.logo_url} 
+                    teamName={game.home_team?.name || 'Home'} 
+                    size="medium" 
+                  />
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-gray-900">
+                      {game.home_score}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {game.home_team?.name || 'Home'}
+                    </div>
                   </div>
                 </div>
                 
@@ -180,13 +188,18 @@ export function Games() {
                   </span>
                 </div>
                 
-                <div className="text-center">
+                <div className="flex items-center space-x-3">
                   <div className="text-3xl font-bold text-gray-900">
                     {game.away_score}
                   </div>
                   <div className="text-sm text-gray-600">
                     {game.away_team?.name || 'Away'}
                   </div>
+                  <TeamLogo 
+                    logoUrl={game.away_team?.logo_url} 
+                    teamName={game.away_team?.name || 'Away'} 
+                    size="medium" 
+                  />
                 </div>
               </div>
 

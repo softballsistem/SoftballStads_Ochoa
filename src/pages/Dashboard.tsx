@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Users, Calendar, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { teamsApi, playersApi, gamesApi, calculatePlayerStats } from '../services/api';
+import { TeamLogo } from '../components/UI/TeamLogo';
 import type { Team, PlayerWithTeamAndStats, GameWithTeamNames } from '../lib/supabase';
 
 export function Dashboard() {
@@ -195,9 +196,25 @@ export function Dashboard() {
               {stats.recentGames.map((game: any) => (
                 <div key={game.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="font-medium text-gray-900">
-                      {game.home_team?.name || 'TBD'} vs {game.away_team?.name || 'TBD'}
-                    </p>
+                    <div className="flex items-center space-x-3 mb-2">
+                      <TeamLogo 
+                        logoUrl={game.home_team?.logo_url} 
+                        teamName={game.home_team?.name || 'TBD'} 
+                        size="small" 
+                      />
+                      <span className="font-medium text-gray-900">
+                        {game.home_team?.name || 'TBD'}
+                      </span>
+                      <span className="text-gray-500">vs</span>
+                      <span className="font-medium text-gray-900">
+                        {game.away_team?.name || 'TBD'}
+                      </span>
+                      <TeamLogo 
+                        logoUrl={game.away_team?.logo_url} 
+                        teamName={game.away_team?.name || 'TBD'} 
+                        size="small" 
+                      />
+                    </div>
                     <p className="text-sm text-gray-600">
                       {new Date(game.date).toLocaleDateString()} • {game.location || 'TBD'}
                     </p>

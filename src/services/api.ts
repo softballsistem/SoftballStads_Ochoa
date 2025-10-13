@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { storageService } from './storage';
 import type { 
   Database, 
   TeamWithPlayers, 
@@ -112,6 +113,7 @@ export const teamsApi = {
           ...team,
           name: team.name?.trim(),
           coach: team.coach?.trim() || null,
+          logo_url: team.logo_url || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
@@ -126,8 +128,39 @@ export const teamsApi = {
     }
   },
 
+  async updateLogo(id: string, logoFile: File): Promise<{ team: Team; logoUrl: string }> {
+    try {
+      // Upload logo to storage
+      const { url, error: uploadError } = await storageService.uploadTeamLogo(logoFile, id);
+      
+      if (uploadError || !url) {
+        throw new Error(uploadError || 'Failed to upload logo');
+      }
+
+      // Update team with logo URL
+      const updatedTeam = await this.update(id, { logo_url: url });
+      
+      return { team: updatedTeam, logoUrl: url };
+    } catch (error) {
+      handleApiError(error, 'update team logo');
+      throw error;
+    }
+  },
+
   async delete(id: string): Promise<void> {
     try {
+      // Get team data to check for logo
+      const { data: team } = await supabase
+        .from('teams')
+        .select('logo_url')
+        .eq('id', id)
+        .single();
+
+      // Delete logo from storage if exists
+      if (team?.logo_url) {
+        await storageService.deleteTeamLogo(id);
+      }
+
       const { error } = await supabase
         .from('teams')
         .delete()
