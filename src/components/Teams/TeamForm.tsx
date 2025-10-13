@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { TeamLogoUpload } from '../UI/TeamLogo';
-import { TeamLogoUpload } from '../UI/TeamLogo';
+import { Team, TeamFormData } from '../../types';
 
 interface TeamFormProps {
-  team?: any;
-  onSubmit: (data: any) => void;
+  team?: Team;
+  onSubmit: (data: TeamFormData) => void;
   onCancel: () => void;
 }
 
 export function TeamForm({ team, onSubmit, onCancel }: TeamFormProps) {
   const [loading, setLoading] = useState(false);
   const [logoUrl, setLogoUrl] = useState(team?.logo_url || null);
-  const [logoUrl, setLogoUrl] = useState(team?.logo_url || null);
   
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<Omit<TeamFormData, 'logo_url'>>({
     defaultValues: {
       name: team?.name || '',
       coach: team?.coach || '',
@@ -26,7 +25,7 @@ export function TeamForm({ team, onSubmit, onCancel }: TeamFormProps) {
     },
   });
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: Omit<TeamFormData, 'logo_url'>) => {
     setLoading(true);
     try {
       await onSubmit({ ...data, logo_url: logoUrl });
@@ -35,9 +34,6 @@ export function TeamForm({ team, onSubmit, onCancel }: TeamFormProps) {
     }
   };
 
-  const handleLogoUpdate = (newLogoUrl: string) => {
-    setLogoUrl(newLogoUrl);
-  };
   const handleLogoUpdate = (newLogoUrl: string) => {
     setLogoUrl(newLogoUrl);
   };

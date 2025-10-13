@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Game, Team, GameFormData } from '../../types';
 
 interface GameFormProps {
-  game?: any;
-  teams: any[];
-  onSubmit: (data: any) => void;
+  game?: Game;
+  teams: Team[];
+  onSubmit: (data: GameFormData) => void;
   onCancel: () => void;
 }
 
@@ -15,7 +16,7 @@ export function GameForm({ game, teams, onSubmit, onCancel }: GameFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<GameFormData>({
     defaultValues: {
       date: game?.date || new Date().toISOString().split('T')[0],
       home_team_id: game?.home_team_id || '',
@@ -27,7 +28,7 @@ export function GameForm({ game, teams, onSubmit, onCancel }: GameFormProps) {
     },
   });
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: GameFormData) => {
     setLoading(true);
     try {
       const formData = {

@@ -5,7 +5,7 @@ import { BarChart3, Users, Trophy, Calendar, LogOut, User, Settings, Shield, Men
 import { getRoleColor } from '../config/roles';
 
 export function Layout() {
-  const { user, signOut, hasPermission, loading } = useAuth();
+  const { user, signOut, hasPermission } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 

@@ -32,7 +32,7 @@ export function LoginForm() {
         // Success - let auth state handle the redirect
         // Don't set loading to false, let the redirect happen
       }
-    } catch (err) {
+    } catch (_) {
       setError('Ocurrió un error inesperado');
     } finally {
       if (error) {
@@ -50,35 +50,7 @@ export function LoginForm() {
       if (error) {
         setError(error);
       }
-    } catch (err) {
-      setError('Ocurrió un error inesperado');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (demoType: 'developer' | 'admin' | 'player') => {
-    setError('');
-    setLoading(true);
-
-    const demoCredentials = {
-      developer: { email: 'hedrichdev@gmail.com', password: 'Coralito*10' },
-      admin: { email: 'admin@example.com', password: 'admin123' },
-      player: { email: 'player@example.com', password: 'player123' }
-    };
-
-    const creds = demoCredentials[demoType];
-    setEmailOrUsername(creds.email);
-    setPassword(creds.password);
-
-    try {
-      const { error } = await signIn(creds.email, creds.password);
-      if (error) {
-        setError(error);
-      } else {
-        // Navigation will be handled by auth state change
-      }
-    } catch (err) {
+    } catch (_) {
       setError('Ocurrió un error inesperado');
     } finally {
       setLoading(false);

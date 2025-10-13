@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Player, PlayerFormData, Team } from '../../types';
 
 interface PlayerFormProps {
-  player?: any;
-  teams: any[];
-  onSubmit: (data: any) => void;
+  player?: Player;
+  teams: Team[];
+  onSubmit: (data: PlayerFormData) => void;
   onCancel: () => void;
 }
 
@@ -15,17 +16,17 @@ export function PlayerForm({ player, teams, onSubmit, onCancel }: PlayerFormProp
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<PlayerFormData>({
     defaultValues: {
       name: player?.name || '',
-      jersey_number: player?.jersey_number || '',
+      jersey_number: player?.jersey_number || null,
       position: player?.position || 'Utility',
       team_id: player?.team_id || '',
       date_of_birth: player?.date_of_birth || '',
     },
   });
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: PlayerFormData) => {
     setLoading(true);
     try {
       const formData = {

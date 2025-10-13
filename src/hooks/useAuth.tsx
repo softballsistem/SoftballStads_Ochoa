@@ -1,18 +1,12 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { User, AuthContextType, UserProfile } from '../types/auth';
 import { determineRole, generatePlayerId, hasPermission, type Permission } from '../config/roles';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+// eslint-disable-next-line react-refresh/only-export-components
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -188,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return { data: result.data };
-    } catch (error) {
+    } catch (_) {
       return { error: 'An unexpected error occurred during sign in' };
     }
   };
@@ -237,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return { data };
-    } catch (error) {
+    } catch (_) {
       return { error: 'An unexpected error occurred during sign up' };
     }
   };
@@ -258,7 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return { data };
-    } catch (error) {
+    } catch (_) {
       return { error: 'An unexpected error occurred with Google sign in' };
     }
   };
@@ -303,7 +297,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser({ ...user, username: newUsername });
       return {};
-    } catch (error) {
+    } catch (_) {
       return { error: 'An unexpected error occurred' };
     }
   };
@@ -318,7 +312,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUser(null);
       }
-    } catch (error) {
+    } catch (_) {
       setError('An unexpected error occurred during sign out');
     }
   };

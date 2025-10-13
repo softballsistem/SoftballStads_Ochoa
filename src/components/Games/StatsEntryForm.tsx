@@ -1,24 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { playersApi, playerStatsApi } from '../../services/api';
-import type { PlayerWithTeamAndStats, PlayerStatWithPlayer, GameWithTeamNames } from '../../lib/supabase';
-import { Save, Plus } from 'lucide-react';
+import type { PlayerWithTeamAndStats, GameWithTeamNames } from '../../lib/supabase';
+import { Save } from 'lucide-react';
+import { PlayerStat } from '../../types';
 
 interface StatsEntryFormProps {
   game: GameWithTeamNames;
   onClose: () => void;
 }
 
+const defaultStat: PlayerStat = {
+  player_id: '',
+  game_id: '',
+  at_bats: 0,
+  hits: 0,
+  runs: 0,
+  rbi: 0,
+  doubles: 0,
+  triples: 0,
+  home_runs: 0,
+  walks: 0,
+  strikeouts: 0,
+  stolen_bases: 0,
+  errors: 0,
+};
+
 export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
   const [players, setPlayers] = useState<PlayerWithTeamAndStats[]>([]);
-  const [playerStats, setPlayerStats] = useState<{ [key: string]: any }>({});
+  const [playerStats, setPlayerStats] = useState<{ [key: string]: PlayerStat }>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [game]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       // Get all players from both teams
       const allPlayers = await playersApi.getAll();
@@ -31,7 +44,7 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
 
       // Load existing stats for this game
       const existingStats = await playerStatsApi.getByGame(game.id);
-      const statsMap: { [key: string]: any } = {};
+      const statsMap: { [key: string]: PlayerStat } = {};
       
       existingStats.forEach(stat => {
         if (stat.player_id) {
@@ -43,19 +56,9 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
       gamePlayers.forEach(player => {
         if (!statsMap[player.id]) {
           statsMap[player.id] = {
+            ...defaultStat,
             player_id: player.id,
             game_id: game.id,
-            at_bats: 0,
-            hits: 0,
-            runs: 0,
-            rbi: 0,
-            doubles: 0,
-            triples: 0,
-            home_runs: 0,
-            walks: 0,
-            strikeouts: 0,
-            stolen_bases: 0,
-            errors: 0,
           };
         }
       });
@@ -66,9 +69,13 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [game.id, game.home_team_id, game.away_team_id]);
 
-  const updateStat = (playerId: string, field: string, value: number) => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const updateStat = (playerId: string, field: keyof PlayerStat, value: number) => {
     setPlayerStats(prev => ({
       ...prev,
       [playerId]: {
@@ -133,7 +140,7 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
                 <PlayerStatRow 
                   key={player.id}
                   player={player}
-                  stats={playerStats[player.id] || {}}
+                  stats={playerStats[player.id] || defaultStat}
                   onUpdate={(field, value) => updateStat(player.id, field, value)}
                 />
               ))}
@@ -152,7 +159,7 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
                 <PlayerStatRow 
                   key={player.id}
                   player={player}
-                  stats={playerStats[player.id] || {}}
+                  stats={playerStats[player.id] || defaultStat}
                   onUpdate={(field, value) => updateStat(player.id, field, value)}
                 />
               ))}
@@ -172,12 +179,12 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
 
 interface PlayerStatRowProps {
   player: PlayerWithTeamAndStats;
-  stats: any;
-  onUpdate: (field: string, value: number) => void;
+  stats: PlayerStat;
+  onUpdate: (field: keyof PlayerStat, value: number) => void;
 }
 
 function PlayerStatRow({ player, stats, onUpdate }: PlayerStatRowProps) {
-  const statFields = [
+  const statFields: { key: keyof PlayerStat; label: string }[] = [
     { key: 'at_bats', label: 'AB' },
     { key: 'hits', label: 'H' },
     { key: 'runs', label: 'R' },
