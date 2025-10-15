@@ -627,8 +627,8 @@ export const userApi = {
         .from('role_change_requests')
         .insert({
           target_user_id: targetUserId,
-          current_role: currentRole,
-          requested_role: requestedRole,
+          from_role: currentRole,
+          to_role: requestedRole,
           reason: reason || null,
           status: 'pending'
         })
@@ -679,7 +679,7 @@ export const userApi = {
 
       // Si se aprueba, actualizar el rol del usuario
       if (status === 'approved' && data) {
-        await this.updateUserRole(data.target_user_id, data.requested_role);
+        await this.updateUserRole(data.target_user_id, data.to_role);
       }
 
       return data;
