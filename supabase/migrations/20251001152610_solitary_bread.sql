@@ -6,8 +6,8 @@
       - `id` (uuid, primary key)
       - `requester_id` (uuid, referencia a user_profiles)
       - `target_user_id` (uuid, referencia a user_profiles)
-      - `current_role` (text)
-      - `requested_role` (text)
+      - `from_role` (text)
+      - `to_role` (text)
       - `reason` (text)
       - `status` (text: pending, approved, rejected)
       - `reviewed_by` (uuid, referencia a user_profiles)
@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS role_change_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   requester_id uuid NOT NULL REFERENCES user_profiles(uid) ON DELETE CASCADE,
   target_user_id uuid NOT NULL REFERENCES user_profiles(uid) ON DELETE CASCADE,
-  current_role text NOT NULL,
-  requested_role text NOT NULL,
+  from_role text NOT NULL,
+  to_role text NOT NULL,
   reason text,
   status text DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
   reviewed_by uuid REFERENCES user_profiles(uid) ON DELETE SET NULL,

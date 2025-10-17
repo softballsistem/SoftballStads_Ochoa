@@ -14,7 +14,7 @@ export function Profile() {
     if (user?.playerId) {
       await navigator.clipboard.writeText(user.playerId);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 200);
     }
   };
 

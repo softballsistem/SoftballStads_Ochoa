@@ -9,8 +9,8 @@ interface RoleChangeRequest {
   id: string;
   requester_id: string;
   target_user_id: string;
-  current_role: string;
-  requested_role: string;
+  from_role: string;
+  to_role: string;
   reason: string | null;
   status: 'pending' | 'approved' | 'rejected';
   reviewed_by: string | null;
@@ -433,12 +433,12 @@ export function UserManagement() {
                           <div>
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Cambio de Rol</p>
                             <div className="flex items-center space-x-2">
-                              <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(request.current_role)}`}>
-                                {request.current_role}
+                              <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(request.from_role)}`}>
+                                {request.from_role}
                               </span>
                               <span className="text-gray-400">→</span>
-                              <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(request.requested_role)}`}>
-                                {request.requested_role}
+                              <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(request.to_role)}`}>
+                                {request.to_role}
                               </span>
                             </div>
                           </div>

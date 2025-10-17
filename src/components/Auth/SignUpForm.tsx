@@ -87,7 +87,7 @@ export function SignUpForm() {
         setError(error);
       } else {
         setSuccess('¡Cuenta creada exitosamente! Puedes iniciar sesión ahora.');
-        setTimeout(() => navigate('/login'), 3000);
+        setTimeout(() => navigate('/login'), 300);
       }
     } catch {
       setError('Ocurrió un error inesperado');
