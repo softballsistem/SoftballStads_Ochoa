@@ -105,6 +105,17 @@ export function AdminDashboard() {
     });
   }
 
+  if (hasPermission('ACCESS_ADMIN')) {
+    adminCards.push({
+      title: 'Upload Stats',
+      description: 'Upload player statistics from a file',
+      icon: BarChart3,
+      link: '/admin/stats-uploader',
+      color: 'bg-teal-500',
+      count: null,
+    });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

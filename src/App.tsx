@@ -14,6 +14,7 @@ import { Profile } from './pages/Profile';
 import { Ranking } from './pages/Ranking';
 import { AdminDashboard } from './pages/Admin/AdminDashboard';
 import { UserManagement } from './pages/Admin/UserManagement';
+import { StatsUploader } from './pages/Admin/StatsUploader';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -86,6 +87,11 @@ function AppRoutes() {
         <Route path="admin/users" element={
           <ProtectedRoute requiredPermission="CHANGE_ROLES">
             <UserManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="admin/stats-uploader" element={
+          <ProtectedRoute requiredPermission="ACCESS_ADMIN">
+            <StatsUploader />
           </ProtectedRoute>
         } />
       </Route>
