@@ -1,56 +1,155 @@
-import React, { useState, useEffect } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { User, Calendar, Hash, BarChart2, TrendingUp, TrendingDown, Swords, Shield, Wind, AlertCircle, CheckCircle } from 'lucide-react';
-import { playersApi, gamesApi, playerStatsApi } from '../../services/api';
-import type { Database, PlayerWithTeamAndStats, GameWithTeamNames } from '../../lib/supabase';
 
-type PlayerStatForm = Database['public']['Tables']['player_stats']['Insert'];
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import Select from 'react-select';
+import { debounce } from 'lodash';
+import { playersApi, gamesApi, playerStatsApi } from '../../services/api';
+import type { Database, PlayerWithTeamAndStats, GameWithTeamNames, PlayerStatWithGame } from '../../lib/supabase';
+import { BarChart2, Calendar, CheckCircle, AlertCircle, User, Hash, TrendingUp, TrendingDown, Swords, Shield, Wind, Edit, Trash2 } from 'lucide-react';
+
+type PlayerStatForm = Database['public']['Tables']['player_stats']['Insert'] & { id?: string };
+
+const statFields: { name: keyof PlayerStatForm, label: string, icon: React.ElementType }[] = [
+  { name: 'at_bats', label: 'Turnos al Bat', icon: Hash },
+  { name: 'hits', label: 'Hits', icon: BarChart2 },
+  { name: 'runs', label: 'Carreras', icon: TrendingUp },
+  { name: 'rbi', label: 'Carreras Impulsadas', icon: TrendingUp },
+  { name: 'doubles', label: 'Dobles', icon: Hash },
+  { name: 'triples', label: 'Triples', icon: Hash },
+  { name: 'home_runs', label: 'Home Runs', icon: Swords },
+  { name: 'walks', label: 'Bases por Bolas', icon: Shield },
+  { name: 'strikeouts', label: 'Ponches', icon: TrendingDown },
+  { name: 'stolen_bases', label: 'Bases Robadas', icon: Wind },
+  { name: 'errors', label: 'Errores', icon: AlertCircle },
+];
 
 export function StatsUploader() {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<PlayerStatForm>();
+  const { register, handleSubmit, reset, control, setValue } = useForm<PlayerStatForm>();
   const [players, setPlayers] = useState<PlayerWithTeamAndStats[]>([]);
   const [games, setGames] = useState<GameWithTeamNames[]>([]);
+  const [playerStats, setPlayerStats] = useState<PlayerStatWithGame[]>([]);
+  const [selectedPlayer, setSelectedPlayer] = useState<{ value: string; label: string } | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [editingStatId, setEditingStatId] = useState<string | null>(null);
+
+  const [playerPage, setPlayerPage] = useState(1);
+  const [hasMorePlayers, setHasMorePlayers] = useState(true);
+  const [playerSearch, setPlayerSearch] = useState('');
+
+  const [gamePage, setGamePage] = useState(1);
+  const [hasMoreGames, setHasMoreGames] = useState(true);
+
+  const debouncedPlayerSearch = useCallback(
+    debounce((search) => {
+      setPlayerSearch(search);
+      setPlayers([]);
+      setPlayerPage(1);
+      setHasMorePlayers(true);
+    }, 500), // 500ms debounce delay
+    []
+  );
 
   useEffect(() => {
-    async function loadData() {
+    if (!hasMorePlayers) return;
+    async function loadPlayers() {
       try {
-        const [playersData, gamesData] = await Promise.all([
-          playersApi.getAll(),
-          gamesApi.getAll(),
-        ]);
-        setPlayers(playersData);
-        setGames(gamesData);
+        const { players: newPlayers, hasMore } = await playersApi.getAll({ page: playerPage, search: playerSearch });
+        setPlayers(prev => page === 1 ? newPlayers : [...prev, ...newPlayers]);
+        setHasMorePlayers(hasMore);
       } catch (err) {
-        setNotification({ type: 'error', message: 'Failed to load players or games.' });
+        setNotification({ type: 'error', message: 'Error al cargar jugadores.' });
       }
     }
-    loadData();
-  }, []);
+    loadPlayers();
+  }, [playerPage, playerSearch, hasMorePlayers]);
+
+  useEffect(() => {
+    if (!hasMoreGames) return;
+    async function loadGames() {
+      try {
+        const { games: newGames, hasMore } = await gamesApi.getAll({ page: gamePage });
+        setGames(prev => gamePage === 1 ? newGames : [...prev, ...newGames]);
+        setHasMoreGames(hasMore);
+      } catch (err) {
+        setNotification({ type: 'error', message: 'Error al cargar juegos.' });
+      }
+    }
+    loadGames();
+  }, [gamePage, hasMoreGames]);
+
+  useEffect(() => {
+    if (selectedPlayer) {
+      playerStatsApi.getByPlayer(selectedPlayer.value).then(setPlayerStats);
+    }
+  }, [selectedPlayer]);
+
+  const playerOptions = useMemo(() => 
+    players.map(p => ({ 
+      value: p.id, 
+      label: `${p.name} (${p.teams?.name || 'Sin equipo'})` 
+    })), 
+    [players]
+  );
+
+  const gameOptions = useMemo(() => 
+    games.map(g => ({ 
+      value: g.id, 
+      label: `${new Date(g.date).toLocaleDateString()} - ${g.home_team?.name || 'TBD'} vs ${g.away_team?.name || 'TBD'}` 
+    })), 
+    [games]
+  );
 
   const onSubmit: SubmitHandler<PlayerStatForm> = async (data) => {
     setIsLoading(true);
     setNotification(null);
     try {
-      await playerStatsApi.upsert(data);
-      setNotification({ type: 'success', message: 'Estadísticas guardadas exitosamente!' });
+      const payload = { ...data, id: editingStatId || undefined };
+      await playerStatsApi.upsert(payload);
+      setNotification({ type: 'success', message: `Estadísticas ${editingStatId ? 'actualizadas' : 'guardadas'} exitosamente!` });
       reset();
+      setEditingStatId(null);
+      if (selectedPlayer) {
+        playerStatsApi.getByPlayer(selectedPlayer.value).then(setPlayerStats);
+      }
     } catch (err: any) {
-      setNotification({ type: 'error', message: err.message || 'Failed to save stats.' });
+      setNotification({ type: 'error', message: err.message || 'Error al guardar estadísticas.' });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleEdit = (stat: PlayerStatWithGame) => {
+    setEditingStatId(stat.id);
+    reset(stat);
+  };
+
+  const handleDelete = async (statId: string) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta estadística?')) {
+      setIsDeleting(statId);
+      setNotification(null);
+      try {
+        await playerStatsApi.delete(statId);
+        setNotification({ type: 'success', message: 'Estadística eliminada exitosamente!' });
+        setPlayerStats(prev => prev.filter(s => s.id !== statId));
+      } catch (err: any) {
+        setNotification({ type: 'error', message: err.message || 'Error al eliminar la estadística.' });
+      } finally {
+        setIsDeleting(null);
+      }
+    }
+  };
+
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-4xl mx-auto">
       <div className="flex items-center mb-4">
         <BarChart2 className="h-8 w-8 mr-2 text-indigo-600" />
-        <h1 className="text-2xl font-bold">Cargar Estadísticas de Jugadores</h1>
+        <h1 className="text-2xl font-bold">Gestión de Estadísticas de Jugadores</h1>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-lg shadow-md">
-        
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-lg shadow-md mb-8">
         {notification && (
           <div className={`flex items-center p-4 rounded-md ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
             {notification.type === 'success' ? <CheckCircle className="h-5 w-5 mr-2" /> : <AlertCircle className="h-5 w-5 mr-2" />}
@@ -59,46 +158,52 @@ export function StatsUploader() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="relative">
+          <div>
             <label htmlFor="player_id" className="block text-sm font-medium text-gray-700 mb-1">Jugador</label>
-            <div className="absolute inset-y-0 left-0 pl-3 pt-7 flex items-center pointer-events-none">
-              <User className="h-5 w-5 text-gray-400" />
-            </div>
-            <select 
-              id="player_id" 
-              {...register('player_id', { required: 'Player is required' })} 
-              className="pl-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            >
-              <option value="">Selecciona un jugador</option>
-              {players.map((player) => (
-                <option key={player.id} value={player.id}>{player.name}</option>
-              ))}
-            </select>
-            {errors.player_id && <p className="text-red-500 text-xs mt-1">{errors.player_id.message}</p>}
+            <Controller
+              name="player_id"
+              control={control}
+              rules={{ required: 'El jugador es obligatorio' }}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={playerOptions}
+                  isSearchable
+                  placeholder="Buscar y seleccionar jugador..."
+                  onInputChange={debouncedPlayerSearch}
+                  value={selectedPlayer}
+                  onChange={(option) => {
+                    setSelectedPlayer(option);
+                    field.onChange(option?.value);
+                  }}
+                  onMenuScrollToBottom={() => setPlayerPage(prev => prev + 1)}
+                  isLoading={isLoading}
+                />
+              )}
+            />
           </div>
-
-          <div className="relative">
+          <div>
             <label htmlFor="game_id" className="block text-sm font-medium text-gray-700 mb-1">Juego</label>
-            <div className="absolute inset-y-0 left-0 pl-3 pt-7 flex items-center pointer-events-none">
-              <Calendar className="h-5 w-5 text-gray-400" />
-            </div>
-            <select 
-              id="game_id" 
-              {...register('game_id', { required: 'Game is required' })} 
-              className="pl-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            >
-              <option value="">Selecciona un juego</option>
-              {games.map((game) => (
-                <option key={game.id} value={game.id}>
-                  {new Date(game.date).toLocaleDateString()} - {game.home_team?.name || 'TBD'} vs {game.away_team?.name || 'TBD'}
-                </option>
-              ))}
-            </select>
-            {errors.game_id && <p className="text-red-500 text-xs mt-1">{errors.game_id.message}</p>}
+            <Controller
+              name="game_id"
+              control={control}
+              rules={{ required: 'El juego es obligatorio' }}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={gameOptions}
+                  isSearchable
+                  placeholder="Seleccionar juego..."
+                  onMenuScrollToBottom={() => setGamePage(prev => prev + 1)}
+                  value={gameOptions.find(g => g.value === field.value)}
+                  onChange={(option) => field.onChange(option?.value)}
+                />
+              )}
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-4 border-t">
           {statFields.map(field => (
             <div key={field.name} className="relative">
               <label htmlFor={field.name} className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
@@ -116,26 +221,50 @@ export function StatsUploader() {
           ))}
         </div>
 
-        <div className="pt-4 border-t">
+        <div className="pt-4 border-t flex items-center gap-4">
           <button type="submit" disabled={isLoading} className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-            {isLoading ? 'Guardando...' : 'Guardar Estadísticas'}
+            {isLoading ? (editingStatId ? 'Actualizando...' : 'Guardando...') : (editingStatId ? 'Actualizar Estadística' : 'Guardar Estadística')}
           </button>
+          {editingStatId && (
+            <button type="button" onClick={() => { reset(); setEditingStatId(null); }} className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+              Cancelar Edición
+            </button>
+          )}
         </div>
       </form>
+
+      {selectedPlayer && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-4">Estadísticas de {selectedPlayer.label}</h2>
+          <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Juego</th>
+                  {statFields.map(f => <th key={f.name} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{f.label}</th>)}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {playerStats.map(stat => (
+                  <tr key={stat.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {stat.games ? new Date(stat.games.date).toLocaleDateString() : 'N/A'}
+                    </td>
+                    {statFields.map(f => <td key={f.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{stat[f.name]}</td>)}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
+                      <button onClick={() => handleEdit(stat)} className="text-indigo-600 hover:text-indigo-900"><Edit className="h-5 w-5" /></button>
+                      <button onClick={() => handleDelete(stat.id)} disabled={isDeleting === stat.id} className="text-red-600 hover:text-red-900 disabled:opacity-50">
+                        {isDeleting === stat.id ? '...' : <Trash2 className="h-5 w-5" />}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-const statFields: { name: keyof PlayerStatForm, label: string, icon: React.ElementType }[] = [
-  { name: 'at_bats', label: 'At Bats', icon: Hash },
-  { name: 'hits', label: 'Hits', icon: BarChart2 },
-  { name: 'runs', label: 'Runs', icon: TrendingUp },
-  { name: 'rbi', label: 'RBI', icon: TrendingUp },
-  { name: 'doubles', label: 'Doubles', icon: Hash },
-  { name: 'triples', label: 'Triples', icon: Hash },
-  { name: 'home_runs', label: 'Home Runs', icon: Swords },
-  { name: 'walks', label: 'Walks', icon: Shield },
-  { name: 'strikeouts', label: 'Strikeouts', icon: TrendingDown },
-  { name: 'stolen_bases', label: 'Stolen Bases', icon: Wind },
-  { name: 'errors', label: 'Errors', icon: AlertCircle },
-];
