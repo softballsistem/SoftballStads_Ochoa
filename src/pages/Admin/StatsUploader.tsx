@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { playersApi } from '../../services/api';
-import { gamesApi } from '../../services/api';
-import { playerStatsApi } from '../../services/api';
-import type { PlayerWithTeamAndStats, GameWithTeamNames, PlayerStat } from '../../lib/supabase';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { User, Calendar, Hash, BarChart2, TrendingUp, TrendingDown, Swords, Shield, Wind, AlertCircle, CheckCircle } from 'lucide-react';
+import { playersApi, gamesApi, playerStatsApi } from '../../services/api';
+import type { Database, PlayerWithTeamAndStats, GameWithTeamNames } from '../../lib/supabase';
+
+type PlayerStatForm = Database['public']['Tables']['player_stats']['Insert'];
 
 export function StatsUploader() {
-  const { register, handleSubmit, reset } = useForm<PlayerStat>();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<PlayerStatForm>();
   const [players, setPlayers] = useState<PlayerWithTeamAndStats[]>([]);
   const [games, setGames] = useState<GameWithTeamNames[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -22,101 +23,119 @@ export function StatsUploader() {
         setPlayers(playersData);
         setGames(gamesData);
       } catch (err) {
-        setError('Failed to load players or games.');
+        setNotification({ type: 'error', message: 'Failed to load players or games.' });
       }
     }
     loadData();
   }, []);
 
-  const onSubmit = async (data: PlayerStat) => {
+  const onSubmit: SubmitHandler<PlayerStatForm> = async (data) => {
     setIsLoading(true);
-    setError(null);
+    setNotification(null);
     try {
       await playerStatsApi.upsert(data);
+      setNotification({ type: 'success', message: 'Estadísticas guardadas exitosamente!' });
       reset();
-    } catch (err) {
-      setError('Failed to save stats.');
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Failed to save stats.' });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Cargar Estadísticas de Jugadores</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="player_id" className="block text-sm font-medium text-gray-700">Jugador</label>
-          <select id="player_id" {...register('player_id', { required: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-            <option value="">Selecciona un jugador</option>
-            {players.map((player) => (
-              <option key={player.id} value={player.id}>{player.name}</option>
-            ))}
-          </select>
-        </div>
+    <div className="p-4 max-w-2xl mx-auto">
+      <div className="flex items-center mb-4">
+        <BarChart2 className="h-8 w-8 mr-2 text-indigo-600" />
+        <h1 className="text-2xl font-bold">Cargar Estadísticas de Jugadores</h1>
+      </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-lg shadow-md">
+        
+        {notification && (
+          <div className={`flex items-center p-4 rounded-md ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {notification.type === 'success' ? <CheckCircle className="h-5 w-5 mr-2" /> : <AlertCircle className="h-5 w-5 mr-2" />}
+            {notification.message}
+          </div>
+        )}
 
-        <div>
-          <label htmlFor="game_id" className="block text-sm font-medium text-gray-700">Juego</label>
-          <select id="game_id" {...register('game_id', { required: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-            <option value="">Selecciona un juego</option>
-            {games.map((game) => (
-              <option key={game.id} value={game.id}>{new Date(game.date).toLocaleDateString()} - {game.home_team?.name || 'TBD'} vs {game.away_team?.name || 'TBD'}</option>
-            ))}
-          </select>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="relative">
+            <label htmlFor="player_id" className="block text-sm font-medium text-gray-700 mb-1">Jugador</label>
+            <div className="absolute inset-y-0 left-0 pl-3 pt-7 flex items-center pointer-events-none">
+              <User className="h-5 w-5 text-gray-400" />
+            </div>
+            <select 
+              id="player_id" 
+              {...register('player_id', { required: 'Player is required' })} 
+              className="pl-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            >
+              <option value="">Selecciona un jugador</option>
+              {players.map((player) => (
+                <option key={player.id} value={player.id}>{player.name}</option>
+              ))}
+            </select>
+            {errors.player_id && <p className="text-red-500 text-xs mt-1">{errors.player_id.message}</p>}
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="at_bats" className="block text-sm font-medium text-gray-700">At Bats</label>
-            <input type="number" id="at_bats" {...register('at_bats', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="hits" className="block text-sm font-medium text-gray-700">Hits</label>
-            <input type="number" id="hits" {...register('hits', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="runs" className="block text-sm font-medium text-gray-700">Runs</label>
-            <input type="number" id="runs" {...register('runs', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="rbi" className="block text-sm font-medium text-gray-700">RBI</label>
-            <input type="number" id="rbi" {...register('rbi', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="doubles" className="block text-sm font-medium text-gray-700">Doubles</label>
-            <input type="number" id="doubles" {...register('doubles', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="triples" className="block text-sm font-medium text-gray-700">Triples</label>
-            <input type="number" id="triples" {...register('triples', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="home_runs" className="block text-sm font-medium text-gray-700">Home Runs</label>
-            <input type="number" id="home_runs" {...register('home_runs', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="walks" className="block text-sm font-medium text-gray-700">Walks</label>
-            <input type="number" id="walks" {...register('walks', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="strikeouts" className="block text-sm font-medium text-gray-700">Strikeouts</label>
-            <input type="number" id="strikeouts" {...register('strikeouts', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="stolen_bases" className="block text-sm font-medium text-gray-700">Stolen Bases</label>
-            <input type="number" id="stolen_bases" {...register('stolen_bases', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-          </div>
-          <div>
-            <label htmlFor="errors" className="block text-sm font-medium text-gray-700">Errors</label>
-            <input type="number" id="errors" {...register('errors', { required: true, valueAsNumber: true })} defaultValue={0} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-.indigo-500 sm:text-sm" />
+          <div className="relative">
+            <label htmlFor="game_id" className="block text-sm font-medium text-gray-700 mb-1">Juego</label>
+            <div className="absolute inset-y-0 left-0 pl-3 pt-7 flex items-center pointer-events-none">
+              <Calendar className="h-5 w-5 text-gray-400" />
+            </div>
+            <select 
+              id="game_id" 
+              {...register('game_id', { required: 'Game is required' })} 
+              className="pl-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            >
+              <option value="">Selecciona un juego</option>
+              {games.map((game) => (
+                <option key={game.id} value={game.id}>
+                  {new Date(game.date).toLocaleDateString()} - {game.home_team?.name || 'TBD'} vs {game.away_team?.name || 'TBD'}
+                </option>
+              ))}
+            </select>
+            {errors.game_id && <p className="text-red-500 text-xs mt-1">{errors.game_id.message}</p>}
           </div>
         </div>
 
-        <button type="submit" disabled={isLoading} className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-          {isLoading ? 'Guardando...' : 'Guardar Estadísticas'}
-        </button>
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t">
+          {statFields.map(field => (
+            <div key={field.name} className="relative">
+              <label htmlFor={field.name} className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+              <div className="absolute inset-y-0 left-0 pl-3 pt-7 flex items-center pointer-events-none">
+                <field.icon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input 
+                type="number" 
+                id={field.name} 
+                {...register(field.name, { required: true, valueAsNumber: true, min: 0 })} 
+                defaultValue={0} 
+                className="pl-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-4 border-t">
+          <button type="submit" disabled={isLoading} className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+            {isLoading ? 'Guardando...' : 'Guardar Estadísticas'}
+          </button>
+        </div>
       </form>
     </div>
   );
 }
+
+const statFields: { name: keyof PlayerStatForm, label: string, icon: React.ElementType }[] = [
+  { name: 'at_bats', label: 'At Bats', icon: Hash },
+  { name: 'hits', label: 'Hits', icon: BarChart2 },
+  { name: 'runs', label: 'Runs', icon: TrendingUp },
+  { name: 'rbi', label: 'RBI', icon: TrendingUp },
+  { name: 'doubles', label: 'Doubles', icon: Hash },
+  { name: 'triples', label: 'Triples', icon: Hash },
+  { name: 'home_runs', label: 'Home Runs', icon: Swords },
+  { name: 'walks', label: 'Walks', icon: Shield },
+  { name: 'strikeouts', label: 'Strikeouts', icon: TrendingDown },
+  { name: 'stolen_bases', label: 'Stolen Bases', icon: Wind },
+  { name: 'errors', label: 'Errors', icon: AlertCircle },
+];
