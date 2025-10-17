@@ -16,26 +16,25 @@ type PlayerStat = Database['public']['Tables']['player_stats']['Row'];
 
 // Enhanced error handling
 const handleApiError = (error: { code?: string; message?: string } | null, operation: string) => {
-  console.error(`API Error - ${operation}:`, error);
-  
-  // Provide more specific error messages
+  console.error(`Error en API - ${operation}:`, error);
+
   if (error?.code === 'PGRST301') {
-    throw new Error(`Database connection error during ${operation}. Please check your internet connection.`);
+    throw new Error(`Error de conexión con la base de datos durante ${operation}. Por favor, revisa tu conexión a internet.`);
   }
   
   if (error?.code === '42P01') {
-    throw new Error(`Database table not found during ${operation}. Please ensure the database is properly set up.`);
+    throw new Error(`Tabla no encontrada en la base de datos durante ${operation}. Asegúrate de que la base de datos esté configurada correctamente.`);
   }
   
   if (error?.message?.includes('JWT')) {
-    throw new Error(`Authentication error during ${operation}. Please log in again.`);
+    throw new Error(`Error de autenticación durante ${operation}. Por favor, inicia sesión de nuevo.`);
   }
   
   if (error?.message?.includes('RLS')) {
-    throw new Error(`Permission error during ${operation}. You may not have the required permissions.`);
+    throw new Error(`Error de permisos durante ${operation}. Puede que no tengas los permisos necesarios.`);
   }
   
-  throw new Error(`Failed to ${operation}: ${error.message || 'Unknown error'}`);
+  throw new Error(`Falló ${operation}: ${error.message || 'Error desconocido'}`);
 };
 
 // Teams API
@@ -176,22 +175,36 @@ export const teamsApi = {
 
 // Players API
 export const playersApi = {
-  async getAll(): Promise<PlayerWithTeamAndStats[]> {
+  async getAll(options: { page?: number, limit?: number, search?: string } = {}): Promise<{ players: PlayerWithTeamAndStats[], hasMore: boolean }> {
+    const { page = 1, limit = 20, search } = options;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('players')
         .select(`
           *,
           teams (name),
           player_stats (*)
         `)
-        .order('name');
+        .order('name')
+        .range(from, to);
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      const { data, error } = await query;
       
       if (error) handleApiError(error, 'fetch players');
-      return data || [];
+
+      const hasMore = data?.length === limit;
+
+      return { players: data || [], hasMore };
     } catch (error) {
       handleApiError(error, 'fetch players');
-      return [];
+      return { players: [], hasMore: false };
     }
   },
 
@@ -305,7 +318,11 @@ export const playersApi = {
 
 // Games API
 export const gamesApi = {
-  async getAll(): Promise<GameWithTeamNames[]> {
+  async getAll(options: { page?: number, limit?: number } = {}): Promise<{ games: GameWithTeamNames[], hasMore: boolean }> {
+    const { page = 1, limit = 20 } = options;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
     try {
       const { data, error } = await supabase
         .from('games')
@@ -314,13 +331,17 @@ export const gamesApi = {
           home_team:teams!games_home_team_id_fkey (name),
           away_team:teams!games_away_team_id_fkey (name)
         `)
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .range(from, to);
       
       if (error) handleApiError(error, 'fetch games');
-      return data || [];
+
+      const hasMore = data?.length === limit;
+
+      return { games: data || [], hasMore };
     } catch (error) {
       handleApiError(error, 'fetch games');
-      return [];
+      return { games: [], hasMore: false };
     }
   },
 
