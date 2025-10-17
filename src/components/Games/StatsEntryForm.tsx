@@ -30,6 +30,7 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
   const [playerStats, setPlayerStats] = useState<{ [key: string]: PlayerStat }>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -87,17 +88,19 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
 
   const saveStats = async () => {
     setSaving(true);
+    setStatusMessage(null);
     try {
       const promises = Object.values(playerStats).map(stat => 
         playerStatsApi.upsert(stat)
       );
       await Promise.all(promises);
-      // Show success message
-      alert('Statistics saved successfully!');
-      onClose();
+      setStatusMessage({ type: 'success', message: 'Statistics saved successfully!' });
+      setTimeout(() => {
+        onClose();
+      }, 1500); // Close modal after a short delay
     } catch (error) {
       console.error('Error saving stats:', error);
-      alert('Error saving statistics. Please try again.');
+      setStatusMessage({ type: 'error', message: 'Error saving statistics. Please try again.' });
     } finally {
       setSaving(false);
     }
@@ -115,75 +118,65 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
   const awayTeamPlayers = players.filter(p => p.team_id === game.away_team_id);
 
   return (
+    
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Player Statistics</h3>
-        <button
-          onClick={saveStats}
-          disabled={saving}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? 'Saving...' : 'Save All Stats'}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Home Team */}
-        {homeTeamPlayers.length > 0 && (
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-3">
-              {game.home_team?.name || 'Home Team'}
-            </h4>
-            <div className="space-y-4">
-              {homeTeamPlayers.map(player => (
-                <PlayerStatRow 
-                  key={player.id}
-                  player={player}
-                  stats={playerStats[player.id] || defaultStat}
-                  onUpdate={(field, value) => updateStat(player.id, field, value)}
-                />
-              ))}
-            </div>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Player Statistics</h3>
+                  <div className="flex items-center space-x-4">
+                    {statusMessage && (
+                      <div className={`text-sm ${statusMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                        {statusMessage.message}
+                      </div>
+                    )}
+                    <button
+                      onClick={saveStats}
+                      disabled={saving}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {saving ? 'Saving...' : 'Save All Stats'}
+                    </button>
+                  </div>
+                </div>    
+          <div className="grid grid-cols-1 gap-6">
+            {/* Home Team */}
+            {homeTeamPlayers.length > 0 && (
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">
+                  {game.home_team?.name || 'Home Team'}
+                </h4>
+                <PlayerStatTable players={homeTeamPlayers} stats={playerStats} onUpdate={updateStat} />
+              </div>
+            )}
+    
+            {/* Away Team */}
+            {awayTeamPlayers.length > 0 && (
+              <div>
+                <h4 className="text-md font-medium text-gray-900 mb-3">
+                  {game.away_team?.name || 'Away Team'}
+                </h4>
+                <PlayerStatTable players={awayTeamPlayers} stats={playerStats} onUpdate={updateStat} />
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Away Team */}
-        {awayTeamPlayers.length > 0 && (
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-3">
-              {game.away_team?.name || 'Away Team'}
-            </h4>
-            <div className="space-y-4">
-              {awayTeamPlayers.map(player => (
-                <PlayerStatRow 
-                  key={player.id}
-                  player={player}
-                  stats={playerStats[player.id] || defaultStat}
-                  onUpdate={(field, value) => updateStat(player.id, field, value)}
-                />
-              ))}
+    
+          {players.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No players found for the teams in this game.</p>
             </div>
-          </div>
-        )}
-      </div>
-
-      {players.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No players found for the teams in this game.</p>
+          )}
         </div>
-      )}
-    </div>
+    
   );
 }
 
-interface PlayerStatRowProps {
-  player: PlayerWithTeamAndStats;
-  stats: PlayerStat;
-  onUpdate: (field: keyof PlayerStat, value: number) => void;
+interface PlayerStatTableProps {
+  players: PlayerWithTeamAndStats[];
+  stats: { [key: string]: PlayerStat };
+  onUpdate: (playerId: string, field: keyof PlayerStat, value: number) => void;
 }
 
-function PlayerStatRow({ player, stats, onUpdate }: PlayerStatRowProps) {
+function PlayerStatTable({ players, stats, onUpdate }: PlayerStatTableProps) {
   const statFields: { key: keyof PlayerStat; label: string }[] = [
     { key: 'at_bats', label: 'AB' },
     { key: 'hits', label: 'H' },
@@ -199,51 +192,67 @@ function PlayerStatRow({ player, stats, onUpdate }: PlayerStatRowProps) {
   ];
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="flex items-center mb-3">
-        <div className="flex-shrink-0 h-8 w-8">
-          <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-            <span className="text-xs font-medium text-green-800">
-              #{player.jersey_number || '00'}
-            </span>
-          </div>
-        </div>
-        <div className="ml-3">
-          <p className="text-sm font-medium text-gray-900">{player.name}</p>
-          <p className="text-xs text-gray-600">{player.position}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-        {statFields.map(field => (
-          <div key={field.key} className="text-center">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              {field.label}
-            </label>
-            <div className="flex items-center">
-              <button
-                onClick={() => onUpdate(field.key, (stats[field.key] || 0) - 1)}
-                className="w-6 h-6 rounded-l-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs font-medium"
-              >
-                -
-              </button>
-              <input
-                type="number"
-                value={stats[field.key] || 0}
-                onChange={(e) => onUpdate(field.key, parseInt(e.target.value) || 0)}
-                className="w-12 h-6 text-center text-xs border-t border-b border-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500"
-                min="0"
-              />
-              <button
-                onClick={() => onUpdate(field.key, (stats[field.key] || 0) + 1)}
-                className="w-6 h-6 rounded-r-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs font-medium"
-              >
-                +
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Player
+            </th>
+            {statFields.map(field => (
+              <th key={field.key} scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {field.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {players.map(player => (
+            <tr key={player.id}>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-8 w-8">
+                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <span className="text-xs font-medium text-green-800">
+                        #{player.jersey_number || '00'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">{player.name}</p>
+                    <p className="text-xs text-gray-600">{player.position}</p>
+                  </div>
+                </div>
+              </td>
+              {statFields.map(field => (
+                <td key={field.key} className="px-2 py-4 whitespace-nowrap">
+                  <div className="flex items-center justify-center">
+                    <button
+                      onClick={() => onUpdate(player.id, field.key, (stats[player.id]?.[field.key] || 0) - 1)}
+                      className="w-6 h-6 rounded-l-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs font-medium"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      value={stats[player.id]?.[field.key] || 0}
+                      onChange={(e) => onUpdate(player.id, field.key, parseInt(e.target.value) || 0)}
+                      className="w-12 h-6 text-center text-xs border-t border-b border-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500"
+                      min="0"
+                    />
+                    <button
+                      onClick={() => onUpdate(player.id, field.key, (stats[player.id]?.[field.key] || 0) + 1)}
+                      className="w-6 h-6 rounded-r-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs font-medium"
+                    >
+                      +
+                    </button>
+                  </div>
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
