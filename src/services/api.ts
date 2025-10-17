@@ -247,6 +247,25 @@ export const playersApi = {
     }
   },
 
+  async getPlayersForGame(homeTeamId: string, awayTeamId: string): Promise<PlayerWithTeamAndStats[]> {
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .select(`
+          *,
+          player_stats (*)
+        `)
+        .in('team_id', [homeTeamId, awayTeamId])
+        .order('name');
+      
+      if (error) handleApiError(error, 'fetch game players');
+      return data || [];
+    } catch (error) {
+      handleApiError(error, 'fetch game players');
+      return [];
+    }
+  },
+
   async create(player: Database['public']['Tables']['players']['Insert']): Promise<Player> {
     try {
       // Validate required fields
@@ -478,7 +497,7 @@ export const playerStatsApi = {
     }
   },
 
-  async upsert(stat: Database['public']['Tables']['player_stats']['Insert']): Promise<PlayerStat> {
+  async upsertOne(stat: Database['public']['Tables']['player_stats']['Insert']): Promise<PlayerStat> {
     try {
       // Validate stats
       if (!stat.player_id || !stat.game_id) {
@@ -513,6 +532,56 @@ export const playerStatsApi = {
         })
         .select()
         .single();
+      
+      if (error) handleApiError(error, 'save player stats');
+      return data;
+    } catch (error) {
+      handleApiError(error, 'save player stats');
+      throw error;
+    }
+  },
+
+  async upsertMany(stats: PlayerStat[]): Promise<PlayerStat[]> {
+    try {
+      // Validate stats
+      if (!stats || stats.length === 0) {
+        return [];
+      }
+
+      const cleanStats = stats.map(stat => {
+        if (!stat.player_id || !stat.game_id) {
+          throw new Error('Player ID and Game ID are required for all stats');
+        }
+        // Ensure non-negative values
+        return {
+          ...stat,
+          at_bats: Math.max(0, stat.at_bats || 0),
+          hits: Math.max(0, stat.hits || 0),
+          runs: Math.max(0, stat.runs || 0),
+          rbi: Math.max(0, stat.rbi || 0),
+          doubles: Math.max(0, stat.doubles || 0),
+          triples: Math.max(0, stat.triples || 0),
+          home_runs: Math.max(0, stat.home_runs || 0),
+          walks: Math.max(0, stat.walks || 0),
+          strikeouts: Math.max(0, stat.strikeouts || 0),
+          stolen_bases: Math.max(0, stat.stolen_bases || 0),
+          errors: Math.max(0, stat.errors || 0),
+        };
+      });
+
+      // Validate hits don't exceed at-bats for all stats
+      for (const stat of cleanStats) {
+        if (stat.hits > stat.at_bats) {
+          throw new Error(`Player ${stat.player_id} hits cannot exceed at-bats`);
+        }
+      }
+
+      const { data, error } = await supabase
+        .from('player_stats')
+        .upsert(cleanStats, { 
+          onConflict: 'player_id,game_id' 
+        })
+        .select();
       
       if (error) handleApiError(error, 'save player stats');
       return data;

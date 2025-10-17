@@ -34,13 +34,13 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
 
   const loadData = useCallback(async () => {
     try {
-      // Get all players from both teams
-      const allPlayers = await playersApi.getAll();
-      const gamePlayers = allPlayers.filter(
-        player => 
-          player.team_id === game.home_team_id || 
-          player.team_id === game.away_team_id
-      );
+      if (!game.home_team_id || !game.away_team_id) {
+        setPlayers([]);
+        setLoading(false);
+        return;
+      }
+      // Get players for the specific game
+      const gamePlayers = await playersApi.getPlayersForGame(game.home_team_id, game.away_team_id);
       setPlayers(gamePlayers);
 
       // Load existing stats for this game
@@ -90,10 +90,7 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
     setSaving(true);
     setStatusMessage(null);
     try {
-      const promises = Object.values(playerStats).map(stat => 
-        playerStatsApi.upsert(stat)
-      );
-      await Promise.all(promises);
+      await playerStatsApi.upsertMany(Object.values(playerStats));
       setStatusMessage({ type: 'success', message: 'Statistics saved successfully!' });
       setTimeout(() => {
         onClose();
@@ -104,6 +101,12 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const calculateScore = (teamPlayers: PlayerWithTeamAndStats[]) => {
+    return teamPlayers.reduce((total, player) => {
+      return total + (playerStats[player.id]?.runs || 0);
+    }, 0);
   };
 
   if (loading) {
@@ -118,55 +121,54 @@ export function StatsEntryForm({ game, onClose }: StatsEntryFormProps) {
   const awayTeamPlayers = players.filter(p => p.team_id === game.away_team_id);
 
   return (
-    
     <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">Player Statistics</h3>
-                  <div className="flex items-center space-x-4">
-                    {statusMessage && (
-                      <div className={`text-sm ${statusMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                        {statusMessage.message}
-                      </div>
-                    )}
-                    <button
-                      onClick={saveStats}
-                      disabled={saving}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {saving ? 'Saving...' : 'Save All Stats'}
-                    </button>
-                  </div>
-                </div>    
-          <div className="grid grid-cols-1 gap-6">
-            {/* Home Team */}
-            {homeTeamPlayers.length > 0 && (
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
-                  {game.home_team?.name || 'Home Team'}
-                </h4>
-                <PlayerStatTable players={homeTeamPlayers} stats={playerStats} onUpdate={updateStat} />
-              </div>
-            )}
-    
-            {/* Away Team */}
-            {awayTeamPlayers.length > 0 && (
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
-                  {game.away_team?.name || 'Away Team'}
-                </h4>
-                <PlayerStatTable players={awayTeamPlayers} stats={playerStats} onUpdate={updateStat} />
-              </div>
-            )}
-          </div>
-    
-          {players.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No players found for the teams in this game.</p>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-gray-900">Player Statistics</h3>
+        <div className="flex items-center space-x-4">
+          {statusMessage && (
+            <div className={`text-sm ${statusMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {statusMessage.message}
             </div>
           )}
+          <button
+            onClick={saveStats}
+            disabled={saving}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {saving ? 'Saving...' : 'Save All Stats'}
+          </button>
         </div>
-    
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        {/* Home Team */}
+        {homeTeamPlayers.length > 0 && (
+          <div>
+            <h4 className="text-md font-medium text-gray-900 mb-3">
+              {game.home_team?.name || 'Home Team'} - Score: {calculateScore(homeTeamPlayers)}
+            </h4>
+            <PlayerStatTable players={homeTeamPlayers} stats={playerStats} onUpdate={updateStat} />
+          </div>
+        )}
+
+        {/* Away Team */}
+        {awayTeamPlayers.length > 0 && (
+          <div>
+            <h4 className="text-md font-medium text-gray-900 mb-3">
+              {game.away_team?.name || 'Away Team'} - Score: {calculateScore(awayTeamPlayers)}
+            </h4>
+            <PlayerStatTable players={awayTeamPlayers} stats={playerStats} onUpdate={updateStat} />
+          </div>
+        )}
+      </div>
+
+      {players.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No players found for the teams in this game.</p>
+        </div>
+      )}
+    </div>
   );
 }
 
