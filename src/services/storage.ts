@@ -43,10 +43,13 @@ export const storageService = {
         return { error: `Error al subir archivo: ${error.message}` };
       }
 
-      // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('team-logos')
         .getPublicUrl(filePath);
+
+      if (!publicUrl) {
+        return { error: 'No se pudo obtener la URL pública del archivo.' };
+      }
 
       return { url: publicUrl };
     } catch (error) {
@@ -68,11 +71,15 @@ export const storageService = {
         });
 
       if (files && files.length > 0) {
-        // Eliminar archivos existentes
-        const filesToDelete = files.map(file => `logos/${file.name}`);
-        await supabase.storage
-          .from('team-logos')
-          .remove(filesToDelete);
+        const filesToDelete = files
+          .filter(file => file.name.startsWith(`${teamId}-`))
+          .map(file => `logos/${file.name}`);
+        
+        if (filesToDelete.length > 0) {
+          await supabase.storage
+            .from('team-logos')
+            .remove(filesToDelete);
+        }
       }
     } catch (error) {
       console.error('Error deleting old logo:', error);
@@ -82,11 +89,16 @@ export const storageService = {
   /**
    * Obtiene la URL pública de un logo
    */
-  getPublicUrl(path: string): string {
-    const { data: { publicUrl } } = supabase.storage
-      .from('team-logos')
-      .getPublicUrl(path);
-    return publicUrl;
+  getPublicUrl(path: string): string | null {
+    try {
+      const { data: { publicUrl } } = supabase.storage
+        .from('team-logos')
+        .getPublicUrl(path);
+      return publicUrl;
+    } catch (error) {
+      console.error('Error getting public URL:', error);
+      return null;
+    }
   },
 
   /**

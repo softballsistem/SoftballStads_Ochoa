@@ -53,21 +53,7 @@ export function TeamForm({ team, onSubmit, onCancel }: TeamFormProps) {
         </div>
       )}
 
-      {/* Logo Upload Section */}
-      {team && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Logo del Equipo
-          </label>
-          <TeamLogoUpload
-            teamId={team.id}
-            currentLogoUrl={logoUrl}
-            onLogoUpdate={handleLogoUpdate}
-          />
-        </div>
-      )}
 
-      <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
           Team Name *
         </label>
