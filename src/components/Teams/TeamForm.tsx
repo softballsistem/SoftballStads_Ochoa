@@ -63,10 +63,7 @@ export function TeamForm({ team, onSubmit, onCancel }: TeamFormProps) {
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
           placeholder="Enter team name"
         />
-        {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-        )}
-      </div>
+
 
       <div>
         <label htmlFor="coach" className="block text-sm font-medium text-gray-700">
