@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Trophy, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { teamsApi } from '../../services/api';
 
 interface TeamLogoProps {
   logoUrl?: string | null;
@@ -116,7 +117,7 @@ export function TeamLogoUpload({
     setError(null);
 
     try {
-      const { teamsApi } = await import('../../services/api');
+
       const { logoUrl } = await teamsApi.updateLogo(teamId, file);
       onLogoUpdate(logoUrl);
     } catch (err) {
