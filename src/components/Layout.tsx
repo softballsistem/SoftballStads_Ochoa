@@ -68,9 +68,7 @@ export function Layout() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               <div className="flex items-center space-x-2">
-                <div className="p-1 bg-green-100 rounded-lg">
-                  <Trophy className="h-6 w-6 text-green-600" />
-                </div>
+                <img src="/Logo.png" alt="SoftballStats Logo" className="h-8 w-auto" />
                 <span className="text-xl font-bold text-gray-900 hidden sm:block">SoftballStats</span>
               </div>
               
