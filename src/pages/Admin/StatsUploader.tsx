@@ -111,18 +111,29 @@ export function StatsUploader() {
   );
 
   const onSubmit: SubmitHandler<PlayerStatForm> = async (data) => {
+    const oldPlayerStats = [...playerStats];
     setIsLoading(true);
     setNotification(null);
+
+    // Optimistically update the UI
+    if (editingStatId) {
+      setPlayerStats(prev => prev.map(s => s.id === editingStatId ? { ...s, ...data } : s));
+    } else {
+      // For new stats, we don't have a game object, so we can't display it properly.
+      // We will just show the stats and 'N/A' for the game.
+      // A better approach would be to have the full game object available.
+      const newStat = { ...data, id: 'temp-id', games: null };
+      setPlayerStats(prev => [...prev, newStat as any]);
+    }
+
     try {
       const payload = { ...data, id: editingStatId || undefined };
       await playerStatsApi.upsert(payload);
       setNotification({ type: 'success', message: `Estadísticas ${editingStatId ? 'actualizadas' : 'guardadas'} exitosamente!` });
       reset();
       setEditingStatId(null);
-      if (selectedPlayer) {
-        playerStatsApi.getByPlayer(selectedPlayer.value).then(setPlayerStats);
-      }
     } catch (err) {
+      setPlayerStats(oldPlayerStats);
       if (err instanceof Error) {
         setNotification({ type: 'error', message: err.message || 'Error al guardar estadísticas.' });
       } else {
@@ -130,6 +141,9 @@ export function StatsUploader() {
       }
     } finally {
       setIsLoading(false);
+      if (selectedPlayer) {
+        playerStatsApi.getByPlayer(selectedPlayer.value).then(setPlayerStats);
+      }
     }
   };
 
