@@ -126,12 +126,6 @@ export function Teams() {
                     size="large" 
                     className="mr-3" 
                   />
-                  <TeamLogo 
-                    logoUrl={team.logo_url} 
-                    teamName={team.name} 
-                    size="large" 
-                    className="mr-3" 
-                  />
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{team.name}</h3>
                     <p className="text-sm text-gray-600">Season: {team.season}</p>
