@@ -1,43 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit2, Trash2, Users, Trophy } from 'lucide-react';
+import { Plus, CreditCard as Edit2, Trash2, Users, Trophy, Search } from 'lucide-react';
 import { teamsApi, playersApi } from '../services/api';
 import type { Team, PlayerWithTeamAndStats } from '../lib/supabase';
 import { TeamForm } from '../components/Teams/TeamForm';
 import { TeamLogo } from '../components/UI/TeamLogo';
 import { Modal } from '../components/UI/Modal';
 import { TeamFormData } from '../types';
+import { useRealtimeData } from '../hooks/useRealtimeData';
 
 export function Teams() {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const { data: teams, loading } = useRealtimeData<Team>('teams', { column: 'name', value: searchTerm });
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [teamPlayers, setTeamPlayers] = useState<{ [key: string]: PlayerWithTeamAndStats[] }>({});
 
   useEffect(() => {
-    loadTeams();
-  }, []);
-
-  const loadTeams = async () => {
-    try {
-      const teamsData = await teamsApi.getAll();
-      setTeams(teamsData);
-      
-      // Load players for each team
-      const playersData: { [key: string]: PlayerWithTeamAndStats[] } = {};
-      await Promise.all(
-        teamsData.map(async (team) => {
-          const players = await playersApi.getByTeam(team.id);
-          playersData[team.id] = players;
-        })
-      );
-      setTeamPlayers(playersData);
-    } catch (error) {
-      console.error('Error loading teams:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadPlayersForTeams = async () => {
+      if (teams.length > 0) {
+        const playersData: { [key: string]: PlayerWithTeamAndStats[] } = {};
+        await Promise.all(
+          teams.map(async (team) => {
+            const players = await playersApi.getByTeam(team.id);
+            playersData[team.id] = players;
+          })
+        );
+        setTeamPlayers(playersData);
+      }
+    };
+    loadPlayersForTeams();
+  }, [teams]);
 
   const handleSubmit = async (teamData: TeamFormData) => {
     try {
@@ -48,7 +40,6 @@ export function Teams() {
       }
       setShowForm(false);
       setEditingTeam(null);
-      await loadTeams(); // Ensure data is refreshed immediately
     } catch (error) {
       console.error('Error saving team:', error);
       // Show error message to user
@@ -65,7 +56,6 @@ export function Teams() {
     if (window.confirm('Are you sure you want to delete this team? This will also delete all associated players and statistics.')) {
       try {
         await teamsApi.delete(teamId);
-        await loadTeams(); // Ensure data is refreshed immediately
       } catch (error) {
         console.error('Error deleting team:', error);
         alert('Error deleting team. Please try again.');
@@ -97,6 +87,21 @@ export function Teams() {
           <Plus className="h-4 w-4 mr-2" />
           Add Team
         </button>
+      </div>
+
+      <div className="mt-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search teams..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+          />
+        </div>
       </div>
 
       {teams.length === 0 ? (

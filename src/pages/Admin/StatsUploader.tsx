@@ -33,14 +33,21 @@ export function StatsUploader() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [editingStatId, setEditingStatId] = useState<string | null>(null);\n  const [isStatsLoading, setIsStatsLoading] = useState(false);\n  const [isPlayersLoading, setIsPlayersLoading] = useState(false);\n  const [isGamesLoading, setIsGamesLoading] = useState(false);
+  const [editingStatId, setEditingStatId] = useState<string | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [isPlayersLoading, setIsPlayersLoading] = useState(false);
+  const [isGamesLoading, setIsGamesLoading] = useState(false);
 
   const [playerPage, setPlayerPage] = useState(1);
   const [hasMorePlayers, setHasMorePlayers] = useState(true);
   const [playerSearch, setPlayerSearch] = useState('');
 
   const [gamePage, setGamePage] = useState(1);
-  const [hasMoreGames, setHasMoreGames] = useState(true);\n  const [step, setStep] = useState(1);\n\n  const nextStep = () => setStep(prev => prev + 1);\n  const prevStep = () => setStep(prev => prev - 1);
+  const [hasMoreGames, setHasMoreGames] = useState(true);
+  const [step, setStep] = useState(1);
+
+  const nextStep = () => setStep(prev => prev + 1);
+  const prevStep = () => setStep(prev => prev - 1);
 
   const debouncedPlayerSearch = useMemo(
     () => debounce((search) => {
@@ -60,7 +67,7 @@ export function StatsUploader() {
         const { players: newPlayers, hasMore } = await playersApi.getAll({ page: playerPage, search: playerSearch });
         setPlayers(prev => playerPage === 1 ? newPlayers : [...prev, ...newPlayers]);
         setHasMorePlayers(hasMore);
-      } catch (_) {
+      } catch {
         setNotification({ type: 'error', message: 'Error al cargar jugadores.' });
       } finally {
         setIsPlayersLoading(false);
@@ -77,7 +84,7 @@ export function StatsUploader() {
         const { games: newGames, hasMore } = await gamesApi.getAll({ page: gamePage });
         setGames(prev => gamePage === 1 ? newGames : [...prev, ...newGames]);
         setHasMoreGames(hasMore);
-      } catch (_) {
+      } catch {
         setNotification({ type: 'error', message: 'Error al cargar juegos.' });
       } finally {
         setIsGamesLoading(false);
@@ -122,8 +129,8 @@ export function StatsUploader() {
       // For new stats, we don't have a game object, so we can't display it properly.
       // We will just show the stats and 'N/A' for the game.
       // A better approach would be to have the full game object available.
-      const newStat = { ...data, id: 'temp-id', games: null };
-      setPlayerStats(prev => [...prev, newStat as any]);
+      const newStat: PlayerStatWithGame = { ...data, id: 'temp-id', games: null };
+      setPlayerStats(prev => [...prev, newStat]);
     }
 
     try {
@@ -229,7 +236,8 @@ export function StatsUploader() {
                         options={gameOptions}
                         isSearchable
                         placeholder="Seleccionar juego..."
-                        onMenuScrollToBottom={() => setGamePage(prev => prev + 1)}\n                  isLoading={isGamesLoading}
+                        onMenuScrollToBottom={() => setGamePage(prev => prev + 1)}
+                        isLoading={isGamesLoading}
                         value={gameOptions.find(g => g.value === field.value)}
                         onChange={(option) => field.onChange(option?.value)}
                       />
