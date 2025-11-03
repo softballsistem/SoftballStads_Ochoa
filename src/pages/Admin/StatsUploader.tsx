@@ -135,7 +135,7 @@ export function StatsUploader() {
 
     try {
       const payload = { ...data, id: editingStatId || undefined };
-      await playerStatsApi.upsert(payload);
+      await playerStatsApi.upsertOne(payload);
       setNotification({ type: 'success', message: `Estadísticas ${editingStatId ? 'actualizadas' : 'guardadas'} exitosamente!` });
       reset();
       setEditingStatId(null);
