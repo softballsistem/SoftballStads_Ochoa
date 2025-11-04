@@ -13,7 +13,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    let sessionChecked = false;
 
     const initializeAuth = async () => {
       try {
@@ -21,7 +20,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!mounted) return;
-        sessionChecked = true;
 
         if (session?.user) {
           await loadUserProfile(session.user);
