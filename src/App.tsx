@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth.tsx';
 import { useAuth } from './hooks/useAuthHook';
@@ -6,39 +6,32 @@ import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginForm } from './components/Auth/LoginForm';
 import { SignUpForm } from './components/Auth/SignUpForm';
-const Dashboard = lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
-const Teams = lazy(() => import('./pages/Teams').then(module => ({ default: module.Teams })));
-const Players = lazy(() => import('./pages/Players').then(module => ({ default: module.Players })));
-const Games = lazy(() => import('./pages/Games').then(module => ({ default: module.Games })));
-const Profile = lazy(() => import('./pages/Profile').then(module => ({ default: module.Profile })));
-const Ranking = lazy(() => import('./pages/Ranking').then(module => ({ default: module.Ranking })));
-const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
-const UserManagement = lazy(() => import('./pages/Admin/UserManagement').then(module => ({ default: module.UserManagement })));
-const StatsUploader = lazy(() => import('./pages/Admin/StatsUploader').then(module => ({ default: module.StatsUploader })));
+import { Dashboard } from './pages/Dashboard';
+import { Teams } from './pages/Teams';
+import { Players } from './pages/Players';
+import { Games } from './pages/Games';
+import { Profile } from './pages/Profile';
+import { Ranking } from './pages/Ranking';
+import { AdminDashboard } from './pages/Admin/AdminDashboard';
+import { UserManagement } from './pages/Admin/UserManagement';
+import { StatsUploader } from './pages/Admin/StatsUploader';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
 
-  // Show loading screen only briefly
+  // Show minimal loading indicator briefly
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Cargando...</p>
-        </div>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
       </div>
     );
   }
 
   return (
-
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Cargando...</p>
-        </div>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
       </div>
     }>
       <Routes>

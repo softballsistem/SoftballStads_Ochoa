@@ -13,13 +13,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let sessionChecked = false;
 
     const initializeAuth = async () => {
       try {
         // Get initial session
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (!mounted) return;
+        sessionChecked = true;
 
         if (session?.user) {
           await loadUserProfile(session.user);
@@ -39,13 +41,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
 
       setError(null);
-      
+
       if (session?.user) {
-        await loadUserProfile(session.user);
+        (async () => {
+          await loadUserProfile(session.user);
+        })();
       } else {
         setUser(null);
         setLoading(false);
@@ -61,13 +65,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
       console.log('Loading user profile for:', supabaseUser.email);
-      
+
       // Check if user profile exists
       const { data: existingProfile, error: fetchError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('uid', supabaseUser.id)
-        .single();
+        .maybeSingle();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
         console.error('Error fetching user profile:', fetchError);
@@ -78,25 +82,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!existingProfile) {
         console.log('Creating new user profile for:', supabaseUser.email);
-        
+
         // Create new user profile
         const role = determineRole(supabaseUser.email || '');
         const playerId = generatePlayerId();
-        
+
         let username = supabaseUser.email?.split('@')[0] || 'user';
-        
+
         // Special handling for super user
         if (supabaseUser.email === 'hedrichdev@gmail.com') {
           username = 'HedrichDev';
         }
-        
+
         // Ensure username is unique
         const { data: existingUsername } = await supabase
           .from('user_profiles')
           .select('username')
           .eq('username', username)
-          .single();
-          
+          .maybeSingle();
+
         if (existingUsername) {
           username = `${username}_${Date.now().toString().slice(-4)}`;
         }
@@ -165,7 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .from('user_profiles')
           .select('email')
           .eq('username', emailOrUsername)
-          .single();
+          .maybeSingle();
 
         if (userProfile) {
           result = await supabase.auth.signInWithPassword({
@@ -210,7 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('user_profiles')
         .select('username')
         .eq('username', username)
-        .single();
+        .maybeSingle();
 
       if (existingUser) {
         return { error: 'Username already exists' };
@@ -275,7 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('username')
         .eq('username', newUsername)
         .neq('uid', user.uid)
-        .single();
+        .maybeSingle();
 
       if (existingUser) {
         return { error: 'Username already exists' };
