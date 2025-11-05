@@ -1,20 +1,21 @@
-import { Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth.tsx';
-import { useAuth } from './hooks/useAuthHook.tsx';
+import { AuthProvider, useAuth } from './hooks/useAuth.tsx';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { LoginForm } from './components/Auth/LoginForm';
-import { SignUpForm } from './components/Auth/SignUpForm';
-import { Dashboard } from './pages/Dashboard';
-import { Teams } from './pages/Teams';
-import { Players } from './pages/Players';
-import { Games } from './pages/Games';
-import { Profile } from './pages/Profile';
-import { Ranking } from './pages/Ranking';
-import { AdminDashboard } from './pages/Admin/AdminDashboard';
-import { UserManagement } from './pages/Admin/UserManagement';
-import { StatsUploader } from './pages/Admin/StatsUploader';
+
+// Lazy-loaded components
+const LoginForm = lazy(() => import('./components/Auth/LoginForm'));
+const SignUpForm = lazy(() => import('./components/Auth/SignUpForm'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Teams = lazy(() => import('./pages/Teams'));
+const Players = lazy(() => import('./pages/Players'));
+const Games = lazy(() => import('./pages/Games'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Ranking = lazy(() => import('./pages/Ranking'));
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
+const UserManagement = lazy(() => import('./pages/Admin/UserManagement'));
+const StatsUploader = lazy(() => import('./pages/Admin/StatsUploader'));
 
 function AppRoutes() {
   const { user, loading } = useAuth();
