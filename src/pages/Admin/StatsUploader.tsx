@@ -195,20 +195,104 @@ function StatsUploader() {
     setIsLoading(true);
     setNotification(null);
 
-    try {
-      // Here you would parse the CSV file and call the API to upload the stats
-      // For now, we will just simulate a successful upload
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setNotification({ type: 'success', message: 'Estadísticas subidas exitosamente!' });
-    } catch (err) {
-      if (err instanceof Error) {
-        setNotification({ type: 'error', message: err.message || 'Error al subir el archivo.' });
-      } else {
-        setNotification({ type: 'error', message: 'Error al subir el archivo.' });
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+      if (lines.length === 0) {
+        setNotification({ type: 'error', message: 'El archivo CSV está vacío.' });
+        setIsLoading(false);
+        return;
       }
-    } finally {
+
+      const headers = lines[0].split(',').map(h => h.trim());
+      const expectedHeaders = ['player_name', 'game_date', 'home_team', 'away_team', 'at_bats', 'hits', 'runs', 'rbi', 'doubles', 'triples', 'home_runs', 'walks', 'strikeouts', 'stolen_bases', 'errors'];
+
+      if (JSON.stringify(headers) !== JSON.stringify(expectedHeaders)) {
+        setNotification({ type: 'error', message: `Formato de encabezado CSV incorrecto. Se esperaba: ${expectedHeaders.join(', ')}` });
+        setIsLoading(false);
+        return;
+      }
+
+      const statsToUpload: PlayerStatForm[] = [];
+      const errors: string[] = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        const rowData: { [key: string]: string } = {};
+        headers.forEach((header, index) => {
+          rowData[header] = values[index];
+        });
+
+        try {
+          // Find player ID
+          const playerResponse = await playersApi.getAll({ search: rowData.player_name });
+          const player = playerResponse.players.find(p => p.name === rowData.player_name);
+          if (!player) {
+            errors.push(`Línea ${i + 1}: Jugador '${rowData.player_name}' no encontrado.`);
+            continue;
+          }
+
+          // Find game ID
+          const gameResponse = await gamesApi.getAll(); // Fetch all games for now, can optimize later
+          const game = gameResponse.games.find(g => 
+            new Date(g.date).toLocaleDateString() === new Date(rowData.game_date).toLocaleDateString() &&
+            g.home_team?.name === rowData.home_team &&
+            g.away_team?.name === rowData.away_team
+          );
+          if (!game) {
+            errors.push(`Línea ${i + 1}: Juego del ${rowData.game_date} entre ${rowData.home_team} y ${rowData.away_team} no encontrado.`);
+            continue;
+          }
+
+          const stat: PlayerStatForm = {
+            player_id: player.id,
+            game_id: game.id,
+            at_bats: parseInt(rowData.at_bats || '0'),
+            hits: parseInt(rowData.hits || '0'),
+            runs: parseInt(rowData.runs || '0'),
+            rbi: parseInt(rowData.rbi || '0'),
+            doubles: parseInt(rowData.doubles || '0'),
+            triples: parseInt(rowData.triples || '0'),
+            home_runs: parseInt(rowData.home_runs || '0'),
+            walks: parseInt(rowData.walks || '0'),
+            strikeouts: parseInt(rowData.strikeouts || '0'),
+            stolen_bases: parseInt(rowData.stolen_bases || '0'),
+            errors: parseInt(rowData.errors || '0'),
+          };
+          statsToUpload.push(stat);
+        } catch (err) {
+          errors.push(`Línea ${i + 1}: Error al procesar (${err instanceof Error ? err.message : 'Error desconocido'}).`);
+        }
+      }
+
+      if (errors.length > 0) {
+        setNotification({ type: 'error', message: `Errores en el archivo: ${errors.join('; ')}` });
+        setIsLoading(false);
+        return;
+      }
+
+      if (statsToUpload.length === 0) {
+        setNotification({ type: 'error', message: 'No se encontraron estadísticas válidas para subir.' });
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        await playerStatsApi.upsertMany(statsToUpload);
+        setNotification({ type: 'success', message: `Se subieron ${statsToUpload.length} estadísticas exitosamente!` });
+      } catch (err) {
+        setNotification({ type: 'error', message: `Error al subir estadísticas: ${err instanceof Error ? err.message : 'Error desconocido'}` });
+      }
       setIsLoading(false);
-    }
+    };
+
+    reader.onerror = () => {
+      setNotification({ type: 'error', message: 'Error al leer el archivo.' });
+      setIsLoading(false);
+    };
+
+    reader.readAsText(file);
   };
 
   return (
