@@ -113,7 +113,6 @@ export const teamsApi = {
           name: team.name?.trim(),
           coach: team.coach?.trim() || null,
           logo_url: team.logo_url || null,
-          updated_at: new Date().toISOString()
         })
         .eq('id', id)
         .select()
@@ -301,7 +300,6 @@ export const playersApi = {
         .update({
           ...player,
           name: player.name?.trim(),
-          updated_at: new Date().toISOString()
         })
         .eq('id', id)
         .select()
@@ -424,7 +422,6 @@ export const gamesApi = {
         .from('games')
         .update({
           ...game,
-          updated_at: new Date().toISOString()
         })
         .eq('id', id)
         .select()
@@ -692,7 +689,6 @@ export const userApi = {
         .from('user_profiles')
         .update({ 
           role: newRole,
-          updated_at: new Date().toISOString()
         })
         .eq('uid', userId)
         .select()
