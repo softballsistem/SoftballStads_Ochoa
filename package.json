@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "optimize-images": "imagemin public/IMAGES/* --out-dir=public/IMAGES/optimized --plugin=pngquant"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.8",
@@ -20,6 +21,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.63.0",
+    "react-query": "^3.39.3",
     "react-router-dom": "^7.9.1",
     "react-select": "^5.10.2",
     "recharts": "^3.2.1"
@@ -36,6 +38,8 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
+    "imagemin-cli": "^8.0.0",
+    "imagemin-pngquant": "^10.0.0",
     "jsdom": "^27.0.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",

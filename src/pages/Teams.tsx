@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { Plus, CreditCard as Edit2, Trash2, Users, Trophy, Search } from 'lucide-react';
 import { teamsApi, playersApi } from '../services/api';
 import type { Team, PlayerWithTeamAndStats } from '../lib/supabase';
@@ -6,18 +7,47 @@ import { TeamForm } from '../components/Teams/TeamForm';
 import { TeamLogo } from '../components/UI/TeamLogo';
 import { Modal } from '../components/UI/Modal';
 import { TeamFormData } from '../types';
-import { useRealtimeData } from '../hooks/useRealtimeData';
+
+const fetchTeams = async () => {
+  return teamsApi.getAll();
+};
 
 function Teams() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const { data: teams, loading } = useRealtimeData<Team>('teams', { column: 'name', value: searchTerm });
+  const queryClient = useQueryClient();
+  const { data: teams, isLoading, error } = useQuery('teams', fetchTeams);
+
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [teamPlayers, setTeamPlayers] = useState<{ [key: string]: PlayerWithTeamAndStats[] }>({});
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const createTeamMutation = useMutation(teamsApi.create, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('teams');
+      setShowForm(false);
+    },
+  });
+
+  const updateTeamMutation = useMutation(
+    (variables: { id: string; teamData: TeamFormData }) => teamsApi.update(variables.id, variables.teamData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('teams');
+        setShowForm(false);
+        setEditingTeam(null);
+      },
+    }
+  );
+
+  const deleteTeamMutation = useMutation(teamsApi.delete, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('teams');
+    },
+  });
 
   useEffect(() => {
     const loadPlayersForTeams = async () => {
-      if (teams.length > 0) {
+      if (teams) {
         const playersData: { [key: string]: PlayerWithTeamAndStats[] } = {};
         await Promise.all(
           teams.map(async (team) => {
@@ -32,18 +62,10 @@ function Teams() {
   }, [teams]);
 
   const handleSubmit = async (teamData: TeamFormData) => {
-    try {
-      if (editingTeam) {
-        await teamsApi.update(editingTeam.id, teamData);
-      } else {
-        await teamsApi.create(teamData);
-      }
-      setShowForm(false);
-      setEditingTeam(null);
-    } catch (error) {
-      console.error('Error saving team:', error);
-      // Show error message to user
-      alert('Error saving team. Please try again.');
+    if (editingTeam) {
+      updateTeamMutation.mutate({ id: editingTeam.id, teamData });
+    } else {
+      createTeamMutation.mutate(teamData);
     }
   };
 
@@ -54,12 +76,7 @@ function Teams() {
 
   const handleDelete = async (teamId: string) => {
     if (window.confirm('Are you sure you want to delete this team? This will also delete all associated players and statistics.')) {
-      try {
-        await teamsApi.delete(teamId);
-      } catch (error) {
-        console.error('Error deleting team:', error);
-        alert('Error deleting team. Please try again.');
-      }
+      deleteTeamMutation.mutate(teamId);
     }
   };
 
@@ -68,12 +85,23 @@ function Teams() {
     setEditingTeam(null);
   };
 
-  if (loading) {
+  const filteredTeams = React.useMemo(() => {
+    if (!teams) return [];
+    return teams.filter(team =>
+      team.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [teams, searchTerm]);
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
       </div>
     );
+  }
+
+  if (error) {
+    return <div>Error loading data</div>;
   }
 
   return (
@@ -104,7 +132,7 @@ function Teams() {
         </div>
       </div>
 
-      {teams.length === 0 ? (
+      {filteredTeams.length === 0 ? (
         <div className="text-center py-12">
           <Trophy className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">No teams</h3>
@@ -121,7 +149,7 @@ function Teams() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teams.map((team) => (
+          {filteredTeams.map((team) => (
             <div key={team.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">

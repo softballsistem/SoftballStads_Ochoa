@@ -1,47 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 import { Shield, Users, Trophy, Calendar, BarChart3, UserCheck } from 'lucide-react';
 import type { GameWithTeamNames } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { teamsApi, playersApi, gamesApi } from '../../services/api';
 
+const fetchAdminDashboardData = async () => {
+  const [teams, playersResponse, gamesResponse] = await Promise.all([
+    teamsApi.getAll(),
+    playersApi.getAll(),
+    gamesApi.getAll(),
+  ]);
+  return { teams, players: playersResponse.players, games: gamesResponse.games };
+};
+
 function AdminDashboard() {
   const { user, hasPermission } = useAuth();
-  const [stats, setStats] = useState({
-    totalTeams: 0,
-    totalPlayers: 0,
-    totalGames: 0,
-    recentActivity: [] as GameWithTeamNames[],
-  });
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, error } = useQuery('adminDashboardData', fetchAdminDashboardData);
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
-    try {
-      const [teams, playersResponse, gamesResponse] = await Promise.all([
-        teamsApi.getAll(),
-        playersApi.getAll(),
-        gamesApi.getAll(),
-      ]);
-
-      const players = playersResponse.players || playersResponse;
-      const games = gamesResponse.games || gamesResponse;
-
-      setStats({
-        totalTeams: teams.length,
-        totalPlayers: players.length,
-        totalGames: games.length,
-        recentActivity: games.slice(0, 5),
-      });
-    } catch (error) {
-      console.error('Error loading admin stats:', error);
-    } finally {
-      setLoading(false);
+  const stats = React.useMemo(() => {
+    if (!data) {
+      return {
+        totalTeams: 0,
+        totalPlayers: 0,
+        totalGames: 0,
+        recentActivity: [],
+      };
     }
-  };
+
+    const { teams, players, games } = data;
+
+    return {
+      totalTeams: teams.length,
+      totalPlayers: players.length,
+      totalGames: games.length,
+      recentActivity: games.slice(0, 5),
+    };
+  }, [data]);
 
   if (!hasPermission('ACCESS_ADMIN')) {
     return (
@@ -55,12 +51,16 @@ function AdminDashboard() {
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
       </div>
     );
+  }
+
+  if (error) {
+    return <div>Error loading data</div>;
   }
 
   const adminCards = [
@@ -176,8 +176,8 @@ function AdminDashboard() {
                     </p>
                   </div>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    game.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    game.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                    game.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                    game.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : 
                     'bg-gray-100 text-gray-800'
                   }`}>
                     {game.status.replace('_', ' ')}

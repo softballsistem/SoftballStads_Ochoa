@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useQuery } from 'react-query';
 import { Trophy, Users, Calendar, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { teamsApi, playersApi, gamesApi, calculatePlayerStats } from '../services/api';
@@ -6,80 +7,80 @@ import { TeamLogo } from '../components/UI/TeamLogo';
 import type { PlayerWithTeamAndStats, GameWithTeamNames } from '../lib/supabase';
 import { TeamStat } from '../types';
 
+const fetchDashboardData = async () => {
+  const [teams, playersResponse, gamesResponse] = await Promise.all([
+    teamsApi.getAll(),
+    playersApi.getAll(),
+    gamesApi.getAll(),
+  ]);
+  return { teams, players: playersResponse.players, games: gamesResponse.games };
+};
+
 function Dashboard() {
-  const [stats, setStats] = useState({
-    totalTeams: 0,
-    totalPlayers: 0,
-    totalGames: 0,
-    recentGames: [] as GameWithTeamNames[],
-  });
-  const [topPerformers, setTopPerformers] = useState<(PlayerWithTeamAndStats & ReturnType<typeof calculatePlayerStats>)[]>([]);
-  const [teamStats, setTeamStats] = useState<TeamStat[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, error } = useQuery('dashboardData', fetchDashboardData);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+  const { stats, topPerformers, teamStats } = React.useMemo(() => {
+    if (!data) {
+      return {
+        stats: {
+          totalTeams: 0,
+          totalPlayers: 0,
+          totalGames: 0,
+          recentGames: [],
+        },
+        topPerformers: [],
+        teamStats: [],
+      };
+    }
 
-  const loadDashboardData = async () => {
-    try {
-      const [teams, playersResponse, gamesResponse] = await Promise.all([
-        teamsApi.getAll(),
-        playersApi.getAll(),
-        gamesApi.getAll(),
-      ]);
+    const { teams, players, games } = data;
 
-      const players = playersResponse.players || playersResponse;
-      const games = gamesResponse.games || gamesResponse;
+    const playersWithStats = players.map(player => {
+      const playerStats = calculatePlayerStats(player.player_stats || []);
+      return {
+        ...player,
+        ...playerStats,
+      };
+    }).filter(player => player.at_bats >= 10)
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 5);
 
-      // Calculate top performers
-      const playersWithStats = players.map(player => {
-        const playerStats = calculatePlayerStats(player.player_stats || []);
-        return {
-          ...player,
-          ...playerStats,
-        };
-      }).filter(player => player.at_bats >= 10)
-        .sort((a, b) => b.avg - a.avg)
-        .slice(0, 5);
+    const teamStatsData = teams.map(team => {
+      const teamPlayers = players.filter(p => p.team_id === team.id);
+      const allStats = teamPlayers.flatMap(p => p.player_stats || []);
+      const teamTotals = calculatePlayerStats(allStats);
+      
+      return {
+        name: team.name,
+        runs: teamTotals.runs,
+        hits: teamTotals.hits,
+        avg: teamTotals.avg,
+        players: teamPlayers.length,
+      };
+    });
 
-      // Calculate team statistics
-      const teamStatsData = teams.map(team => {
-        const teamPlayers = players.filter(p => p.team_id === team.id);
-        const allStats = teamPlayers.flatMap(p => p.player_stats || []);
-        const teamTotals = calculatePlayerStats(allStats);
-        
-        return {
-          name: team.name,
-          runs: teamTotals.runs,
-          hits: teamTotals.hits,
-          avg: teamTotals.avg,
-          players: teamPlayers.length,
-        };
-      });
-
-      setStats({
+    return {
+      stats: {
         totalTeams: teams.length,
         totalPlayers: players.length,
         totalGames: games.length,
         recentGames: games.slice(0, 5),
-      });
-      
-      setTopPerformers(playersWithStats);
-      setTeamStats(teamStatsData);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      },
+      topPerformers: playersWithStats,
+      teamStats: teamStatsData,
+    };
+  }, [data]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
       </div>
     );
+  }
+
+  if (error) {
+    return <div>Error loading data</div>;
   }
 
   return (
@@ -223,8 +224,8 @@ function Dashboard() {
                       {game.home_score} - {game.away_score}
                     </p>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      game.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      game.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                      game.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                      game.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : 
                       'bg-gray-100 text-gray-800'
                     }`}>
                       {game.status.replace('_', ' ')}
