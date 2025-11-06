@@ -21,7 +21,7 @@ function Players() {
 
   const loadData = async () => {
     try {
-      const [playersData, teamsData] = await Promise.all([
+      const [{ players: playersData }, teamsData] = await Promise.all([
         playersApi.getAll(),
         teamsApi.getAll(),
       ]);

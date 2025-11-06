@@ -13,7 +13,7 @@ function Ranking() {
 
   const loadPlayers = async () => {
     try {
-      const playersData = await playersApi.getAll();
+      const { players: playersData } = await playersApi.getAll();
       setPlayers(playersData);
     } catch (error) {
       console.error('Error loading players:', error);
