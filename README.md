@@ -4,6 +4,9 @@ SoftballStads_Ochoa
 todo se puso mal, NO PUEDE SER sad adad sad
 SOY LA CABRA que pasooooo dudalo
 
+APUEEEEEEEES DUDALOOOOOOOOOOOO 
+
+HZ ON TOP NOJODASS
 
 Sistema de Solicitudes de cambio de roles
 
