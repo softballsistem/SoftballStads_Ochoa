@@ -168,11 +168,6 @@ function Games() {
                     teamName={game.home_team?.name || 'Home'} 
                     size="medium" 
                   />
-                  <TeamLogo 
-                    logoUrl={game.home_team?.logo_url} 
-                    teamName={game.home_team?.name || 'Home'} 
-                    size="medium" 
-                  />
                   <div className="text-center">
                     <div className="text-3xl font-bold text-gray-900">
                       {game.home_score}
@@ -201,11 +196,6 @@ function Games() {
                   <div className="text-sm text-gray-600">
                     {game.away_team?.name || 'Away'}
                   </div>
-                  <TeamLogo 
-                    logoUrl={game.away_team?.logo_url} 
-                    teamName={game.away_team?.name || 'Away'} 
-                    size="medium" 
-                  />
                   <TeamLogo 
                     logoUrl={game.away_team?.logo_url} 
                     teamName={game.away_team?.name || 'Away'} 

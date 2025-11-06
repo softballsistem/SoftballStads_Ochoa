@@ -23,7 +23,11 @@ const statFields: { name: keyof PlayerStatForm, label: string, icon: React.Eleme
   { name: 'errors', label: 'Errores', icon: AlertCircle, category: 'Fildeo' },
 ];
 
-export function StatsUploader() {
+function StatsUploader() {
+  // ...
+}
+
+export default StatsUploader;
   const { register, handleSubmit, reset, control } = useForm<PlayerStatForm>();
   const [players, setPlayers] = useState<PlayerWithTeamAndStats[]>([]);
   const [games, setGames] = useState<GameWithTeamNames[]>([]);

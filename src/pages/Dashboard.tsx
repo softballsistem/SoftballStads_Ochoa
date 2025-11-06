@@ -213,11 +213,6 @@ function Dashboard() {
                       <span className="font-medium text-gray-900">
                         {game.away_team?.name || 'TBD'}
                       </span>
-                      <TeamLogo
-                        logoUrl={game.away_team?.logo_url}
-                        teamName={game.away_team?.name || 'TBD'}
-                        size="small"
-                      />
                     </div>
                     <p className="text-sm text-gray-600">
                       {new Date(game.date).toLocaleDateString()} • {game.location || 'TBD'}
