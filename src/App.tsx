@@ -14,8 +14,8 @@ const Games = lazy(() => import('./pages/Games'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Ranking = lazy(() => import('./pages/Ranking'));
 const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
-const UserManagement = lazy(() => import('./pages/Admin/UserManagement'));
-const StatsUploader = lazy(() => import('./pages/Admin/StatsUploader'));
+// const UserManagement = lazy(() => import('./pages/Admin/UserManagement'));
+// const StatsUploader = lazy(() => import('./pages/Admin/StatsUploader'));
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -77,7 +77,7 @@ function AppRoutes() {
             </ProtectedRoute>
           } />
           <Route path="profile" element={<Profile />} />
-          <Route path="ranking" element={
+          <Routhe path="ranking" element={
             <ProtectedRoute requiredPermission="VIEW_STATS">
               <Ranking />
             </ProtectedRoute>
@@ -87,16 +87,16 @@ function AppRoutes() {
               <AdminDashboard />
             </ProtectedRoute>
           } />
-          <Route path="admin/users" element={
+          {/* <Route path="admin/users" element={
             <ProtectedRoute requiredPermission="CHANGE_ROLES">
               <UserManagement />
             </ProtectedRoute>
-          } />
-          <Route path="admin/stats-uploader" element={
+          } /> */}
+          {/* <Route path="admin/stats-uploader" element={
             <ProtectedRoute requiredPermission="ACCESS_ADMIN">
               <StatsUploader />
             </ProtectedRoute>
-          } />
+          } /> */}
         </Route>
         
         {/* Fallback route */}
