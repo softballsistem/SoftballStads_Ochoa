@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Users, Trophy, Calendar, BarChart3, UserCheck } from 'lucide-react';
 import type { GameWithTeamNames } from '../../lib/supabase';
-import { useAuth } from '../../hooks/useAuthHook';
+import { useAuth } from '../../hooks/useAuth';
 
 export function AdminDashboard() {
   const { user, hasPermission } = useAuth();

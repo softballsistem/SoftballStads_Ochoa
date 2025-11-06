@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuthHook';
+import { useAuth } from '../../hooks/useAuth';
 import { Trophy, Mail, Lock, AlertCircle, CheckCircle, User, Eye, EyeOff } from 'lucide-react';
 
 export function SignUpForm() {

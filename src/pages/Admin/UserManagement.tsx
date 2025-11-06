@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Shield, CreditCard as Edit2, Save, X, AlertTriangle, Clock, Check, Ban, Eye, UserPlus, Bell } from 'lucide-react';
 
 import { userApi } from '../../services/api';
-import { useAuth } from '../../hooks/useAuthHook';
+import { useAuth } from '../../hooks/useAuth';
 import { getRoleDescription } from '../../config/roles';
 
 interface RoleChangeRequest {
