@@ -39,11 +39,14 @@ const handleApiError = (error: { code?: string; message?: string } | null, opera
 
 // Teams API
 export const teamsApi = {
-  async getAll(): Promise<Team[]> {
+  async getAll(): Promise<TeamWithPlayers[]> {
     try {
       const { data, error } = await supabase
         .from('teams')
-        .select('*')
+        .select(`
+          *,
+          players (*)
+        `)
         .order('name');
       
       if (error) handleApiError(error, 'fetch teams');
