@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { Plus, CreditCard as Edit2, Trash2, Users, Trophy, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users, Trophy, Search } from 'lucide-react';
 import { teamsApi } from '../services/api';
 import type { TeamWithPlayers } from '../lib/supabase';
 import { TeamForm } from '../components/Teams/TeamForm';
@@ -16,11 +16,8 @@ function Teams() {
   const queryClient = useQueryClient();
   const { data: teams, isLoading, error } = useQuery('teams', fetchTeams);
 
-  console.log({ teams, isLoading, error });
-
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<TeamWithPlayers | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   const createTeamMutation = useMutation(teamsApi.create, {
     onSuccess: () => {
@@ -70,13 +67,6 @@ function Teams() {
     setEditingTeam(null);
   };
 
-  const filteredTeams = React.useMemo(() => {
-    if (!teams) return [];
-    return teams.filter(team =>
-      team.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [teams, searchTerm]);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -102,102 +92,70 @@ function Teams() {
         </button>
       </div>
 
-      <div className="mt-4">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search teams..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-green-500 focus:border-green-500 sm:text-sm"
-          />
-        </div>
-      </div>
-
-      {filteredTeams.length === 0 ? (
-        <div className="text-center py-12">
-          <Trophy className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No teams</h3>
-          <p className="mt-1 text-sm text-gray-500">Get started by creating a new team.</p>
-          <div className="mt-6">
-            <button
-              onClick={() => setShowForm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Team
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTeams.map((team) => (
-            <div key={team.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <TeamLogo 
-                    logoUrl={team.logo_url} 
-                    teamName={team.name} 
-                    size="large" 
-                    className="mr-3" 
-                  />
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{team.name}</h3>
-                    <p className="text-sm text-gray-600">Season: {team.season}</p>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEdit(team)}
-                    className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(team.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {teams?.map((team) => (
+          <div key={team.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <TeamLogo 
+                  logoUrl={team.logo_url} 
+                  teamName={team.name} 
+                  size="large" 
+                  className="mr-3" 
+                />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{team.name}</h3>
+                  <p className="text-sm text-gray-600">Season: {team.season}</p>
                 </div>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center text-sm text-gray-600">
-                  <Users className="h-4 w-4 mr-2" />
-                  <span>Coach: {team.coach || 'Not assigned'}</span>
-                </div>
-                
-                <div className="flex items-center text-sm text-gray-600">
-                  <Users className="h-4 w-4 mr-2" />
-                  <span>Players: {team.players?.length || 0}</span>
-                </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEdit(team)}
+                  className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(team.id)}
+                  className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
-
-              {team.players && team.players.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Recent Players</h4>
-                  <div className="space-y-1">
-                    {team.players.slice(0, 3).map((player) => (
-                      <div key={player.id} className="text-xs text-gray-600">
-                        #{player.jersey_number || '00'} {player.name} - {player.position}
-                      </div>
-                    ))}
-                    {team.players.length > 3 && (
-                      <div className="text-xs text-gray-500">
-                        +{team.players.length - 3} more players
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
-          ))}
-        </div>
-      )}
+
+            <div className="space-y-3">
+              <div className="flex items-center text-sm text-gray-600">
+                <Users className="h-4 w-4 mr-2" />
+                <span>Coach: {team.coach || 'Not assigned'}</span>
+              </div>
+              
+              <div className="flex items-center text-sm text-gray-600">
+                <Users className="h-4 w-4 mr-2" />
+                <span>Players: {team.players?.length || 0}</span>
+              </div>
+            </div>
+
+            {team.players && team.players.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Recent Players</h4>
+                <div className="space-y-1">
+                  {team.players.slice(0, 3).map((player) => (
+                    <div key={player.id} className="text-xs text-gray-600">
+                      #{player.jersey_number || '00'} {player.name} - {player.position}
+                    </div>
+                  ))}
+                  {team.players.length > 3 && (
+                    <div className="text-xs text-gray-500">
+                      +{team.players.length - 3} more players
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
 
       <Modal
         isOpen={showForm}
