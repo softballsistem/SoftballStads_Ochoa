@@ -3,7 +3,7 @@ import { Trophy, Medal, Award, Target, Zap, Star, TrendingUp, Activity } from 'l
 import { playersApi, calculatePlayerStats } from '../services/api';
 import type { PlayerWithTeamAndStats } from '../lib/supabase';
 
-export function Ranking() {
+function Ranking() {
   const [players, setPlayers] = useState<PlayerWithTeamAndStats[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -262,3 +262,5 @@ const RankingCard = ({ title, players, statKey, statLabel, icon, bgColor = "bg-w
     </div>
   );
 }
+
+export default Ranking;

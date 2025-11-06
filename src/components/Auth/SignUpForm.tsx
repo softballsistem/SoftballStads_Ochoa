@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Trophy, Mail, Lock, AlertCircle, CheckCircle, User, Eye, EyeOff } from 'lucide-react';
 
-export function SignUpForm() {
+function SignUpForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -301,3 +301,5 @@ export function SignUpForm() {
     </div>
   );
 }
+
+export default SignUpForm;

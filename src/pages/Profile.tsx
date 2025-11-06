@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { User, Mail, Hash, Shield, Copy, Check, Edit2, Save, X } from 'lucide-react';
 
-export function Profile() {
+function Profile() {
   const { user, updateUsername } = useAuth();
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [newUsername, setNewUsername] = useState(user?.username || '');
@@ -185,3 +185,5 @@ export function Profile() {
     </div>
   );
 }
+
+export default Profile;

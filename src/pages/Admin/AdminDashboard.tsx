@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { Shield, Users, Trophy, Calendar, BarChart3, UserCheck } from 'lucide-react';
 import type { GameWithTeamNames } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import { teamsApi, playersApi, gamesApi } from '../../services/api';
 
-export function AdminDashboard() {
+function AdminDashboard() {
   const { user, hasPermission } = useAuth();
   const [stats, setStats] = useState({
     totalTeams: 0,
@@ -20,11 +21,14 @@ export function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      const [teams, players, games] = await Promise.all([
+      const [teams, playersResponse, gamesResponse] = await Promise.all([
         teamsApi.getAll(),
         playersApi.getAll(),
         gamesApi.getAll(),
       ]);
+
+      const players = playersResponse.players || playersResponse;
+      const games = gamesResponse.games || gamesResponse;
 
       setStats({
         totalTeams: teams.length,
@@ -187,3 +191,5 @@ export function AdminDashboard() {
     </div>
   );
 }
+
+export default AdminDashboard;

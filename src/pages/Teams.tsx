@@ -8,7 +8,7 @@ import { Modal } from '../components/UI/Modal';
 import { TeamFormData } from '../types';
 import { useRealtimeData } from '../hooks/useRealtimeData';
 
-export function Teams() {
+function Teams() {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: teams, loading } = useRealtimeData<Team>('teams', { column: 'name', value: searchTerm });
   const [showForm, setShowForm] = useState(false);
@@ -200,3 +200,5 @@ export function Teams() {
     </div>
   );
 }
+
+export default Teams;
