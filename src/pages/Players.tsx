@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { Plus, CreditCard as Edit2, Trash2, User } from 'lucide-react';
 import { playersApi, teamsApi, calculatePlayerStats } from '../services/api';
 import type { PlayerWithTeamAndStats, Team } from '../lib/supabase';
@@ -6,47 +7,52 @@ import { PlayerForm } from '../components/Players/PlayerForm';
 import { Modal } from '../components/UI/Modal';
 import { PlayerFormData } from '../types';
 
+const fetchPlayersAndTeams = async () => {
+  const [playersResponse, teams] = await Promise.all([
+    playersApi.getAll(),
+    teamsApi.getAll(),
+  ]);
+  return { players: playersResponse.players, teams };
+};
+
 function Players() {
-  const [players, setPlayers] = useState<PlayerWithTeamAndStats[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data, isLoading, error } = useQuery('playersAndTeams', fetchPlayersAndTeams);
+
   const [showForm, setShowForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<PlayerWithTeamAndStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const createPlayerMutation = useMutation(playersApi.create, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('playersAndTeams');
+      setShowForm(false);
+    },
+  });
 
-  const loadData = async () => {
-    try {
-      const [{ players: playersData }, teamsData] = await Promise.all([
-        playersApi.getAll(),
-        teamsApi.getAll(),
-      ]);
-      setPlayers(playersData);
-      setTeams(teamsData);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
+  const updatePlayerMutation = useMutation(
+    (variables: { id: string; playerData: PlayerFormData }) => playersApi.update(variables.id, variables.playerData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('playersAndTeams');
+        setShowForm(false);
+        setEditingPlayer(null);
+      },
     }
-  };
+  );
+
+  const deletePlayerMutation = useMutation(playersApi.delete, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('playersAndTeams');
+    },
+  });
 
   const handleSubmit = async (playerData: PlayerFormData) => {
-    try {
-      if (editingPlayer) {
-        await playersApi.update(editingPlayer.id, playerData);
-      } else {
-        await playersApi.create(playerData);
-      }
-      setShowForm(false);
-      setEditingPlayer(null);
-      await loadData(); // Ensure data is refreshed immediately
-    } catch (error) {
-      console.error('Error saving player:', error);
-      alert('Error saving player. Please try again.');
+    if (editingPlayer) {
+      updatePlayerMutation.mutate({ id: editingPlayer.id, playerData });
+    } else {
+      createPlayerMutation.mutate(playerData);
     }
   };
 
@@ -57,13 +63,7 @@ function Players() {
 
   const handleDelete = async (playerId: string) => {
     if (window.confirm('Are you sure you want to delete this player? This will also delete all associated statistics.')) {
-      try {
-        await playersApi.delete(playerId);
-        await loadData(); // Ensure data is refreshed immediately
-      } catch (error) {
-        console.error('Error deleting player:', error);
-        alert('Error deleting player. Please try again.');
-      }
+      deletePlayerMutation.mutate(playerId);
     }
   };
 
@@ -72,18 +72,25 @@ function Players() {
     setEditingPlayer(null);
   };
 
-  const filteredPlayers = players.filter(player => {
-    const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTeam = !selectedTeam || player.team_id === selectedTeam;
-    return matchesSearch && matchesTeam;
-  });
+  const filteredPlayers = React.useMemo(() => {
+    if (!data) return [];
+    return data.players.filter(player => {
+      const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesTeam = !selectedTeam || player.team_id === selectedTeam;
+      return matchesSearch && matchesTeam;
+    });
+  }, [data, searchTerm, selectedTeam]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
       </div>
     );
+  }
+
+  if (error) {
+    return <div>Error loading data</div>;
   }
 
   return (
@@ -117,7 +124,7 @@ function Players() {
             className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
           >
             <option value="">All Teams</option>
-            {teams.map((team) => (
+            {data?.teams.map((team) => (
               <option key={team.id} value={team.id}>
                 {team.name}
               </option>
@@ -244,7 +251,7 @@ function Players() {
       >
         <PlayerForm
           player={editingPlayer}
-          teams={teams}
+          teams={data?.teams || []}
           onSubmit={handleSubmit}
           onCancel={closeForm}
         />

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { Plus, CreditCard as Edit2, Trash2, Calendar, MapPin, Trophy } from 'lucide-react';
 import { gamesApi, teamsApi } from '../services/api';
 import type { GameWithTeamNames, Team } from '../lib/supabase';
@@ -8,47 +9,52 @@ import { TeamLogo } from '../components/UI/TeamLogo';
 import { Modal } from '../components/UI/Modal';
 import { GameFormData } from '../types';
 
+const fetchGamesAndTeams = async () => {
+  const [gamesResponse, teams] = await Promise.all([
+    gamesApi.getAll(),
+    teamsApi.getAll(),
+  ]);
+  return { games: gamesResponse.games, teams };
+};
+
 function Games() {
-  const [games, setGames] = useState<GameWithTeamNames[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data, isLoading, error } = useQuery('gamesAndTeams', fetchGamesAndTeams);
+
   const [showGameForm, setShowGameForm] = useState(false);
   const [showStatsForm, setShowStatsForm] = useState(false);
   const [editingGame, setEditingGame] = useState<GameWithTeamNames | null>(null);
   const [selectedGame, setSelectedGame] = useState<GameWithTeamNames | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const createGameMutation = useMutation(gamesApi.create, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('gamesAndTeams');
+      setShowGameForm(false);
+    },
+  });
 
-  const loadData = async () => {
-    try {
-      const [gamesData, teamsData] = await Promise.all([
-        gamesApi.getAll(),
-        teamsApi.getAll(),
-      ]);
-      setGames(gamesData);
-      setTeams(teamsData);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
+  const updateGameMutation = useMutation(
+    (variables: { id: string; gameData: GameFormData }) => gamesApi.update(variables.id, variables.gameData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('gamesAndTeams');
+        setShowGameForm(false);
+        setEditingGame(null);
+      },
     }
-  };
+  );
+
+  const deleteGameMutation = useMutation(gamesApi.delete, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('gamesAndTeams');
+    },
+  });
 
   const handleGameSubmit = async (gameData: GameFormData) => {
-    try {
-      if (editingGame) {
-        await gamesApi.update(editingGame.id, gameData);
-      } else {
-        await gamesApi.create(gameData);
-      }
-      setShowGameForm(false);
-      setEditingGame(null);
-      await loadData(); // Ensure data is refreshed immediately
-    } catch (error) {
-      console.error('Error saving game:', error);
-      alert('Error saving game. Please try again.');
+    if (editingGame) {
+      updateGameMutation.mutate({ id: editingGame.id, gameData });
+    } else {
+      createGameMutation.mutate(gameData);
     }
   };
 
@@ -59,13 +65,7 @@ function Games() {
 
   const handleDelete = async (gameId: string) => {
     if (window.confirm('Are you sure you want to delete this game? This will also delete all associated statistics.')) {
-      try {
-        await gamesApi.delete(gameId);
-        await loadData(); // Ensure data is refreshed immediately
-      } catch (error) {
-        console.error('Error deleting game:', error);
-        alert('Error deleting game. Please try again.');
-      }
+      deleteGameMutation.mutate(gameId);
     }
   };
 
@@ -82,15 +82,19 @@ function Games() {
   const closeStatsForm = () => {
     setShowStatsForm(false);
     setSelectedGame(null);
-    loadData();
+    queryClient.invalidateQueries('gamesAndTeams');
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
       </div>
     );
+  }
+
+  if (error) {
+    return <div>Error loading data</div>;
   }
 
   return (
@@ -106,7 +110,7 @@ function Games() {
         </button>
       </div>
 
-      {games.length === 0 ? (
+      {data?.games.length === 0 ? (
         <div className="text-center py-12">
           <Calendar className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">No games scheduled</h3>
@@ -123,7 +127,7 @@ function Games() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {games.map((game) => (
+          {data?.games.map((game) => (
             <div key={game.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
@@ -181,8 +185,8 @@ function Games() {
                 <div className="text-center">
                   <div className="text-lg font-medium text-gray-500">vs</div>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    game.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    game.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                    game.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                    game.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : 
                     'bg-gray-100 text-gray-800'
                   }`}>
                     {game.status.replace('_', ' ')}
@@ -217,7 +221,7 @@ function Games() {
                       onClick={async () => {
                         try {
                           await gamesApi.update(game.id, { status: 'in_progress' });
-                          await loadData();
+                          queryClient.invalidateQueries('gamesAndTeams');
                         } catch (error) {
                           console.error('Error updating game status:', error);
                           alert('Error updating game status. Please try again.');
@@ -233,7 +237,7 @@ function Games() {
                       onClick={async () => {
                         try {
                           await gamesApi.update(game.id, { status: 'completed' });
-                          await loadData();
+                          queryClient.invalidateQueries('gamesAndTeams');
                         } catch (error) {
                           console.error('Error updating game status:', error);
                           alert('Error updating game status. Please try again.');
@@ -258,7 +262,7 @@ function Games() {
       >
         <GameForm
           game={editingGame}
-          teams={teams}
+          teams={data?.teams || []}
           onSubmit={handleGameSubmit}
           onCancel={closeGameForm}
         />
