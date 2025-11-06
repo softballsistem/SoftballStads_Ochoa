@@ -16,6 +16,8 @@ function Teams() {
   const queryClient = useQueryClient();
   const { data: teams, isLoading, error } = useQuery('teams', fetchTeams);
 
+  console.log({ teams, isLoading, error });
+
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<TeamWithPlayers | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
