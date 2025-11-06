@@ -6,7 +6,7 @@ import { PlayerForm } from '../components/Players/PlayerForm';
 import { Modal } from '../components/UI/Modal';
 import { PlayerFormData } from '../types';
 
-export function Players() {
+function Players() {
   const [players, setPlayers] = useState<PlayerWithTeamAndStats[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -252,3 +252,5 @@ export function Players() {
     </div>
   );
 }
+
+export default Players;

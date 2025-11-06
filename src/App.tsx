@@ -77,7 +77,7 @@ function AppRoutes() {
             </ProtectedRoute>
           } />
           <Route path="profile" element={<Profile />} />
-          <Routhe path="ranking" element={
+          <Route path="ranking" element={
             <ProtectedRoute requiredPermission="VIEW_STATS">
               <Ranking />
             </ProtectedRoute>

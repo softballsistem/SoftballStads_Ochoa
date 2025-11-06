@@ -8,7 +8,7 @@ import { TeamLogo } from '../components/UI/TeamLogo';
 import { Modal } from '../components/UI/Modal';
 import { GameFormData } from '../types';
 
-export function Games() {
+function Games() {
   const [games, setGames] = useState<GameWithTeamNames[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -290,3 +290,5 @@ export function Games() {
     </div>
   );
 }
+
+export default Games;

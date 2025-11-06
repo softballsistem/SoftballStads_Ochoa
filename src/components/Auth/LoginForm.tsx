@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Trophy, Mail, Lock, AlertCircle, Chrome, Eye, EyeOff } from 'lucide-react';
 
-export function LoginForm() {
+function LoginForm() {
   const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -189,3 +189,5 @@ export function LoginForm() {
     </div>
   );
 }
+
+export default LoginForm;
