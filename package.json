@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://softballsistem.github.io/SoftballStads_Ochoa",
+
   "scripts": {
     "dev": "vite",
     "build": "vite build",
