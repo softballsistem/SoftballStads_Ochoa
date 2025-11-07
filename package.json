@@ -1,4 +1,5 @@
 {
+  "homepage": "https://STB.github.io/SoftballStads_Ochoa",
   "name": "vite-react-typescript-starter",
   "private": true,
   "version": "0.0.0",
@@ -11,7 +12,7 @@
     "preview": "vite preview",
     "test": "vitest",
 
-    "deploy": "cross-env NODE_DEBUG=gh-pages gh-pages -d dist"
+    "deploy": "cross-env NODE_DEBUG=gh-pages gh-pages -d dist -t true -u 'github-actions-bot <support+actions@github.com>' -r 'https://github.com/softballsistem/SoftballStads_Ochoa.git' --git-config-options 'user.name=github-actions-bot' --git-config-options 'user.email=support+actions@github.com' --git-config-options 'commit.gpgsign=false' --git-config-options 'user.signingkey=' --git-config-options 'http.https://github.com/.extraheader=\"AUTHORIZATION: basic $(echo -n x-access-token:${GH_PAGES_TOKEN} | base64)\"'"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.8",
