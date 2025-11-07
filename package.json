@@ -10,8 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+
+    "deploy": "cross-env NODE_DEBUG=gh-pages gh-pages -d dist"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.8",
@@ -37,6 +37,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
+    "cross-env": "^10.1.0",
     "eslint": "^9.38.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",

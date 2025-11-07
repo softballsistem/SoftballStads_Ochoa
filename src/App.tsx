@@ -109,7 +109,7 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename="/SoftballStads_Ochoa">
         <AppRoutes />
       </Router>
     </AuthProvider>
