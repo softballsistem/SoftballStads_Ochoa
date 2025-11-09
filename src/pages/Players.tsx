@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { Plus, CreditCard as Edit2, Trash2, User } from 'lucide-react';
 import { playersApi, teamsApi, calculatePlayerStats } from '../services/api';
-import type { PlayerWithTeamAndStats, Team } from '../lib/supabase';
+import type { PlayerWithTeamAndStats } from '../lib/supabase';
 import { PlayerForm } from '../components/Players/PlayerForm';
 import { Modal } from '../components/UI/Modal';
 import { PlayerFormData } from '../types';

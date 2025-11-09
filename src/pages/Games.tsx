@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { Plus, CreditCard as Edit2, Trash2, Calendar, MapPin, Trophy } from 'lucide-react';
 import { gamesApi, teamsApi } from '../services/api';
-import type { GameWithTeamNames, Team } from '../lib/supabase';
+import type { GameWithTeamNames } from '../lib/supabase';
 import { GameForm } from '../components/Games/GameForm';
 import { StatsEntryForm } from '../components/Games/StatsEntryForm';
 import { TeamLogo } from '../components/UI/TeamLogo';

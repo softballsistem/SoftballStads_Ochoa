@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { Plus, Edit2, Trash2, Users, Trophy, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users } from 'lucide-react';
 import { teamsApi } from '../services/api';
 import type { TeamWithPlayers } from '../lib/supabase';
 import { TeamForm } from '../components/Teams/TeamForm';
