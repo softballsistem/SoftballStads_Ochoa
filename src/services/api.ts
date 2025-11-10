@@ -8,6 +8,7 @@ import type {
   PlayerStatWithPlayer, 
   PlayerStatWithGame 
 } from '../lib/supabase';
+import type { User, UserProfile } from '../types/auth';
 
 type Team = Database['public']['Tables']['teams']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
@@ -178,10 +179,8 @@ export const teamsApi = {
 
 // Players API
 export const playersApi = {
-  async getAll(options: { page?: number, limit?: number, search?: string } = {}): Promise<{ players: PlayerWithTeamAndStats[], hasMore: boolean }> {
-    const { page = 1, limit = 20, search } = options;
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+  async getAll(options: { search?: string } = {}): Promise<{ players: PlayerWithTeamAndStats[], hasMore: boolean }> {
+    const { search } = options;
 
     try {
       let query = supabase
@@ -191,8 +190,7 @@ export const playersApi = {
           teams (name),
           player_stats (*)
         `)
-        .order('name')
-        .range(from, to);
+        .order('name');
 
       if (search) {
         query = query.ilike('name', `%${search}%`);
@@ -202,9 +200,7 @@ export const playersApi = {
       
       if (error) handleApiError(error, 'fetch players');
 
-      const hasMore = data?.length === limit;
-
-      return { players: data || [], hasMore };
+      return { players: data || [], hasMore: false };
     } catch (error) {
       handleApiError(error, 'fetch players');
       return { players: [], hasMore: false };
@@ -679,7 +675,7 @@ export const calculatePlayerStats = (stats: PlayerStat[]) => {
 
 // User management API (for admin functions)
 export const userApi = {
-  async getAllUsers() {
+  async getAllUsers(): Promise<User[]> {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
@@ -687,7 +683,18 @@ export const userApi = {
         .order('created_at', { ascending: false });
 
       if (error) handleApiError(error, 'fetch users');
-      return data || [];
+      
+      const users: User[] = (data || []).map((profile: UserProfile) => ({
+        uid: profile.uid,
+        email: profile.email,
+        username: profile.username,
+        role: profile.role,
+        playerId: profile.player_id,
+        createdAt: profile.created_at,
+        updatedAt: profile.updated_at,
+      }));
+
+      return users;
     } catch (error) {
       handleApiError(error, 'fetch users');
       return [];

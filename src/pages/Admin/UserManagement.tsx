@@ -92,7 +92,7 @@ export function UserManagement() {
         await userApi.updateUserRole(userId, newRole);
         setUsers(users.map(u => 
           u.uid === userId 
-            ? { ...u, role: newRole, updated_at: new Date().toISOString() }
+            ? { ...u, role: newRole, updatedAt: new Date().toISOString() }
             : u
         ));
         alert('Rol de usuario actualizado exitosamente!');
@@ -355,10 +355,10 @@ export function UserManagement() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
-                      {userItem.player_id}
+                      {userItem.playerId}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(userItem.created_at).toLocaleDateString()}
+                      {new Date(userItem.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       {editingUser !== userItem.uid && (
