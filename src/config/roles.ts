@@ -10,6 +10,7 @@ export const ADMIN_EMAILS = [
   'coach@team1.com',
   'manager@league.com',
   'admin@softballstats.com',
+  'juliocesarco.1242@gmail.com',
   // Add more admin emails here
 ];
 
