@@ -1,57 +1,82 @@
-SoftballStads_Ochoa
+# SoftballStads Ochoa
 
+This project is a softball statistics tracking application. It allows users to manage teams, players, games, and player statistics.
 
-todo se puso mal, NO PUEDE SER sad adad sad
-SOY LA CABRA que pasooooo dudalo
+## Getting Started
 
-APUEEEEEEEES DUDALOOOOOOOOOOOO 
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-HZ ON TOP NOJODASS
+### Prerequisites
 
-Sistema de Solicitudes de cambio de roles
+- Node.js (v18 or higher)
+- npm
 
-Nueva Tabla
-role_change_requests
-id (uuid, primary key)
-requester_id (uuid, referencia a user_profiles)
-target_user_id (uuid, referencia a user_profiles)
-current_role (text)
-requested_role (text)
-reason (text)
-status (text: pending, approved, rejected)
-reviewed_by (uuid, referencia a user_profiles)
-reviewed_at (timestamp)
-created_at (timestamp)
-Seguridad
-Enable RLS en role_change_requests
-Políticas para desarrolladores y administradores
+### Installation
 
-config completa de base de datos 
-Tablas Principales
-teams - Equipos de softball
-players - Jugadores
-games - Juegos/Partidos
-player_stats - Estadísticas de jugadores por juego
-user_profiles - Perfiles de usuarios
-role_change_requests - Solicitudes de cambio de rol
-Seguridad
-RLS habilitado en todas las tablas
-Políticas específicas por rol
-Función de actualización de timestamps
-Índices
-Optimización de consultas
-Búsquedas eficientes
-Datos de Prueba
-Equipos de ejemplo
-Jugadores de muestra
-Juegos programados
+1.  **Clone the repository:**
+    ```sh
+    git clone https://github.com/your-username/SoftballStads_Ochoa.git
+    cd SoftballStads_Ochoa
+    ```
 
+2.  **Install dependencies:**
+    ```sh
+    npm install
+    ```
 
-agg soporte para logos de equipos 
-Modificaciones a la tabla teams
-Agregar columna logo_url para almacenar la URL del logo
-Configuración de Storage
-Crear bucket para logos de equipos
-Configurar políticas de acceso
-Índices y optimizaciones
-Índice en logo_url para búsquedas rápidas
+3.  **Set up environment variables:**
+    Create a `.env` file in the root of the project and add the following environment variables. You can get these from your Supabase project settings.
+
+    ```
+    VITE_SUPABASE_URL=https://your-project.supabase.co
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+    ```
+
+### Usage
+
+-   **Run the development server:**
+    ```sh
+    npm run dev
+    ```
+    This will start the application in development mode. Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
+
+-   **Build for production:**
+    ```sh
+    npm run build
+    ```
+    This will build the application for production to the `dist` folder.
+
+-   **Lint the code:**
+    ```sh
+    npm run lint
+    ```
+
+---
+
+## Database Schema
+
+### Tables
+
+-   **teams:** Softball teams
+-   **players:** Players
+-   **games:** Games/Matches
+-   **player_stats:** Player statistics per game
+-   **user_profiles:** User profiles
+-   **role_change_requests:** Role change requests
+
+### Security
+
+-   RLS enabled on all tables
+-   Specific policies per role
+-   Timestamp update function
+-   Indexes for query optimization
+
+### Team Logos
+
+-   The `teams` table has a `logo_url` column to store the URL of the team logo.
+-   A Supabase Storage bucket is used to store the team logos.
+
+### Role Change Requests
+
+-   The `role_change_requests` table is used to manage role change requests from users.
+-   RLS is enabled on this table with policies for developers and administrators.
